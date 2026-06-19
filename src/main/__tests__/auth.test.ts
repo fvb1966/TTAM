@@ -10,6 +10,8 @@ vi.mock('../prisma', () => {
 
 vi.mock('argon2', () => ({ default: { hash: vi.fn(async (p) => `hashed-${p}`), verify: vi.fn(async (h, p) => h === `hashed-${p}`) } }))
 
+vi.mock('../config', () => ({ readConfig: vi.fn(async () => ({})), writeConfig: vi.fn(async () => {}) }))
+
 import * as auth from '../auth'
 import { prisma } from '../prisma'
 import argon2 from 'argon2'
