@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = "file:../data/ttam.db"
 }
 
 model User {
@@ -14,4 +14,28 @@ model User {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Student {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String?
+  email     String?  @unique
+  phone     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  payments  Payment[]
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  student     Student  @relation(fields: [studentId], references: [id])
+  studentId   Int
+  amountCents Int
+  currency    String   @default("ARS")
+  description String?
+  method      String?
+  paidAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
 }
