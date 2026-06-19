@@ -3,6 +3,8 @@ import Header from './Header'
 import Sidebar from './Sidebar'
 import Alumnos from './pages/Alumnos'
 import Pagos from './pages/Pagos'
+import Torneos from './pages/Torneos'
+import Inscripciones from './pages/Inscripciones'
 
 export default function Layout() {
   const [page, setPage] = useState('dashboard')
@@ -13,6 +15,10 @@ export default function Layout() {
         return <Alumnos />
       case 'pagos':
         return <Pagos />
+      case 'torneos_list':
+        return <Torneos />
+      case 'inscripciones':
+        return <Inscripciones />
       default:
         return (
           <div>

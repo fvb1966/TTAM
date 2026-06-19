@@ -26,6 +26,7 @@ model Student {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   payments  Payment[]
+  registrations Registration[]
 }
 
 model Payment {
@@ -38,4 +39,24 @@ model Payment {
   method      String?
   paidAt      DateTime @default(now())
   createdAt   DateTime @default(now())
+}
+
+model Tournament {
+  id          Int           @id @default(autoincrement())
+  name        String
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  registrations Registration[]
+}
+
+model Registration {
+  id           Int       @id @default(autoincrement())
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId Int
+  student      Student   @relation(fields: [studentId], references: [id])
+  studentId    Int
+  status       String    @default("registered")
+  createdAt    DateTime  @default(now())
 }
