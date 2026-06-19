@@ -1,7 +1,7 @@
 # TODO - TTAM (Table Tennis Academy Manager)
 
 Proyecto: TTAM
-Ubicación: E:\IA\APPs\Tenis de Mesa APP
+Ubicación: E:\IA\APPs\Tenis_de_Mesa_APP
 Idioma: Español
 Moneda por defecto: $ Argentino (ARS)
 Base de datos local sugerida: `data/ttam.db` (SQLite)
