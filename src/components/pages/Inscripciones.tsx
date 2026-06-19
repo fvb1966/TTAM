@@ -104,13 +104,41 @@ export default function Inscripciones() {
 
       {errors.length > 0 && (
         <Card>
-          <h4 className="text-sm font-medium text-red-600">Errores ({errors.length})</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-red-600">Errores ({errors.length})</h4>
+            <div>
+              <Button onClick={() => {
+                // exportar errores a CSV
+                const rows = errors.flatMap(err => err.issues.map((i: any) => ({
+                  fila: err.index,
+                  campo: i.fieldLabel || i.field || '',
+                  mensaje: i.friendly || i.message,
+                })))
+                const csv = Papa.unparse(rows)
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `errores_importacion_${new Date().toISOString().replace(/[:.]/g,'-')}.csv`
+                document.body.appendChild(a)
+                a.click()
+                a.remove()
+                URL.revokeObjectURL(url)
+              }}>Exportar errores</Button>
+            </div>
+          </div>
+
           <div className="mt-2 overflow-auto">
             <ul className="space-y-2">
               {errors.map((err, idx) => (
                 <li key={idx} className="p-2 border rounded">
                   <div className="font-semibold">Fila: {err.index}</div>
-                  <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(err.issues, null, 2)}</pre>
+                  {err.row && <div className="text-xs mb-2">Registro: <pre className="whitespace-pre-wrap">{JSON.stringify(err.row)}</pre></div>}
+                  <ul className="text-sm list-disc pl-5">
+                    {err.issues.map((i: any, ii: number) => (
+                          <li key={ii}>{i.friendly ? i.friendly : `${i.fieldLabel}: ${i.message}`}</li>
+                        ))}
+                  </ul>
                 </li>
               ))}
             </ul>
