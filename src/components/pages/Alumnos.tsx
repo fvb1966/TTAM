@@ -5,6 +5,7 @@ import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import Table from '@/components/ui/Table'
 import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/Confirm'
 
 type Student = {
   id: number
@@ -17,6 +18,7 @@ type Student = {
 export default function Alumnos() {
   const { t } = useTranslation()
   const { showToast } = useToast()
+  const confirm = useConfirm()
   const [students, setStudents] = useState<Student[]>([])
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -78,7 +80,8 @@ export default function Alumnos() {
   }
 
   const handleDeleteStudent = async (id: number) => {
-    if (!confirm('¿Eliminar alumno?')) return
+    const ok = await confirm('¿Eliminar alumno?')
+    if (!ok) return
     try {
       await window.ttam.db.deleteStudent(id)
       load()

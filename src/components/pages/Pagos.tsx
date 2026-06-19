@@ -4,6 +4,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/Confirm'
 
 type Student = { id: number; firstName: string; lastName?: string }
 type Payment = { id: number; amountCents: number; currency: string; student?: Student; paidAt: string }
@@ -13,6 +14,7 @@ type EditPayment = { id: number; studentId?: number | null; amount?: string }
 export default function Pagos() {
   const { t } = useTranslation()
   const { showToast } = useToast()
+  const confirm = useConfirm()
   const [students, setStudents] = useState<Student[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
   const [studentId, setStudentId] = useState<number | null>(null)
@@ -72,7 +74,8 @@ export default function Pagos() {
   }
 
   const handleDeletePayment = async (id: number) => {
-    if (!confirm('¿Eliminar pago?')) return
+    const ok = await confirm('¿Eliminar pago?')
+    if (!ok) return
     try {
       await window.ttam.db.deletePayment(id)
       load()

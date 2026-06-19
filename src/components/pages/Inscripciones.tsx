@@ -4,6 +4,7 @@ import Papa from 'papaparse'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/Confirm'
 
 type Tournament = { id: number; name: string }
 type CsvRow = Record<string, string>
@@ -26,6 +27,7 @@ export default function Inscripciones() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [loading, setLoading] = useState(false)
   const { showToast } = useToast()
+  const confirm = useConfirm()
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null)
   const [registrations, setRegistrations] = useState<Registration[]>([])
@@ -152,7 +154,8 @@ export default function Inscripciones() {
   }
 
   const handleDeleteRegistration = async (id: number) => {
-    if (!confirm('¿Borrar inscripción?')) return
+    const ok = await confirm('¿Borrar inscripción?')
+    if (!ok) return
     try {
       await window.ttam.db.deleteRegistration(id)
       await loadRegistrations(tournamentId)
