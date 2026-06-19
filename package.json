@@ -12,6 +12,7 @@
     "lint:fix": "eslint --ext .ts,.tsx,.js,.jsx src --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "build:main": "esbuild src/main/main.ts --bundle --platform=node --outfile=dist/main.js --external:electron --sourcemap && esbuild src/main/preload.ts --bundle --platform=node --outfile=dist/preload.js --sourcemap",
+    "dist": "electron-builder",
     "build:main:watch": "concurrently \"esbuild src/main/main.ts --bundle --platform=node --outfile=dist/main.js --external:electron --sourcemap --watch\" \"esbuild src/main/preload.ts --bundle --platform=node --outfile=dist/preload.js --sourcemap --watch\"",
     "electron:dev": "concurrently \"npm:dev\" \"npm:build:main:watch\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
     "prisma:generate": "prisma generate",
