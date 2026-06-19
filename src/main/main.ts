@@ -186,6 +186,95 @@ app.whenReady().then(() => {
       if (fs.existsSync(docsPath)) archive.directory(docsPath, 'Docs')
       archive.finalize()
     })
+
+    // List available backup zip files in backupDir
+    ipcMain.handle('backup:list', async () => {
+      try {
+        const cfg = await readConfig()
+        const backupDir = cfg && cfg.backupDir ? path.resolve(String(cfg.backupDir)) : path.join(process.cwd(), 'Docs', 'backup')
+        if (!fs.existsSync(backupDir)) return []
+        const files = await fs.promises.readdir(backupDir)
+        const zipFiles = files.filter(f => f.toLowerCase().endsWith('.zip'))
+        const stats = await Promise.all(zipFiles.map(async f => {
+          const p = path.join(backupDir, f)
+          const s = await fs.promises.stat(p)
+          return { name: f, path: p, mtime: s.mtime.getTime() }
+        }))
+        stats.sort((a, b) => b.mtime - a.mtime)
+        return stats
+      } catch (err) {
+        return []
+      }
+    })
+
+    // Restore a backup zip: safely backup current DB, extract zip and replace data/ and Docs/
+    ipcMain.handle('backup:restore', async (_event, zipPath?: string) => {
+      try {
+        if (!zipPath || typeof zipPath !== 'string') throw new Error('zipPath required')
+        if (!fs.existsSync(zipPath)) throw new Error('Backup not found')
+
+        const unzipper = await import('unzipper')
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+        const tmpDir = path.join(process.cwd(), 'tmp', `restore-${timestamp}`)
+        await fs.promises.mkdir(tmpDir, { recursive: true })
+
+        const directory = await (unzipper as any).Open.file(zipPath)
+        await directory.extract({ path: tmpDir })
+
+        const extractedDb = path.join(tmpDir, 'data', 'ttam.db')
+        const extractedDocs = path.join(tmpDir, 'Docs')
+        const dbPath = path.join(process.cwd(), 'data', 'ttam.db')
+
+        const cfg = await readConfig()
+        const backupDir = cfg && cfg.backupDir ? path.resolve(String(cfg.backupDir)) : path.join(process.cwd(), 'Docs', 'backup')
+        await fs.promises.mkdir(backupDir, { recursive: true })
+        const preRestore = path.join(backupDir, `ttam-pre-restore-${timestamp}.db`)
+
+        if (fs.existsSync(dbPath)) {
+          await fs.promises.copyFile(dbPath, preRestore)
+        }
+
+        // Disconnect prisma, replace files, reconnect
+        try { await prisma.$disconnect() } catch { }
+
+        if (fs.existsSync(extractedDb)) {
+          await fs.promises.copyFile(extractedDb, dbPath)
+        }
+
+        if (fs.existsSync(extractedDocs)) {
+          // remove existing Docs and copy extracted Docs
+          await fs.promises.rm(path.join(process.cwd(), 'Docs'), { recursive: true, force: true })
+          // prefer native fs.promises.cp when available
+          if ((fs as any).promises && (fs as any).promises.cp) {
+            await (fs as any).promises.cp(extractedDocs, path.join(process.cwd(), 'Docs'), { recursive: true })
+          } else {
+            const copyRecursive = async (src: string, dest: string) => {
+              await fs.promises.mkdir(dest, { recursive: true })
+              const items = await fs.promises.readdir(src, { withFileTypes: true })
+              for (const item of items) {
+                const srcP = path.join(src, item.name)
+                const destP = path.join(dest, item.name)
+                if (item.isDirectory()) {
+                  await copyRecursive(srcP, destP)
+                } else {
+                  await fs.promises.copyFile(srcP, destP)
+                }
+              }
+            }
+            await copyRecursive(extractedDocs, path.join(process.cwd(), 'Docs'))
+          }
+        }
+
+        try { await prisma.$connect() } catch { }
+
+        // cleanup
+        await fs.promises.rm(tmpDir, { recursive: true, force: true })
+
+        return { restored: true, preRestoreBackup: preRestore }
+      } catch (err) {
+        return { restored: false, error: String(err) }
+      }
+    })
   })
 
   createWindow()

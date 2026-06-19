@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('ttam', {
   },
   backup: {
     create: () => ipcRenderer.invoke('backup:create'),
+    list: () => ipcRenderer.invoke('backup:list'),
+    restore: (zipPath: string) => ipcRenderer.invoke('backup:restore', zipPath),
   },
   settings: {
     get: () => ipcRenderer.invoke('app:getSettings'),

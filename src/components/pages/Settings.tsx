@@ -9,6 +9,8 @@ export default function Settings() {
   const [currency, setCurrency] = useState('ARS')
   const [dbPath, setDbPath] = useState('')
   const [backupDir, setBackupDir] = useState('')
+  const [backups, setBackups] = useState<Array<{ name: string; path: string; mtime: number }>>([])
+  const [selectedBackup, setSelectedBackup] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -22,6 +24,14 @@ export default function Settings() {
         setCurrency(cfg.currency || 'ARS')
         setBackupDir(cfg.backupDir || (paths.backupDir || ''))
         setDbPath(paths.dbPath || '')
+        // fetch available backups
+        try {
+          const list = await (window as any).ttam.backup.list()
+          setBackups(list || [])
+          if ((list || []).length > 0) setSelectedBackup(list[0].path)
+        } catch {
+          // ignore
+        }
       } catch (err) {
         // ignore
       }
@@ -50,10 +60,48 @@ export default function Settings() {
     try {
       const p = await (window as any).ttam.backup.create()
       alert(`Backup creado: ${p}`)
+      try {
+        const list = await (window as any).ttam.backup.list()
+        setBackups(list || [])
+      } catch {}
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
       alert('Error al crear backup')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchBackups = async () => {
+    setLoading(true)
+    try {
+      const list = await (window as any).ttam.backup.list()
+      setBackups(list || [])
+      if ((list || []).length > 0) setSelectedBackup(list[0].path)
+    } catch (err) {
+      // ignore
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRestore = async () => {
+    if (!selectedBackup) return alert('Seleccione un backup para restaurar')
+    const ok = confirm('Se hará una copia de seguridad del estado actual antes de restaurar. ¿Continuar?')
+    if (!ok) return
+    setLoading(true)
+    try {
+      const res = await (window as any).ttam.backup.restore(selectedBackup)
+      if (res && res.restored) {
+        alert('Restauración completada. Se creó copia previa: ' + (res.preRestoreBackup || ''))
+      } else {
+        alert('Error al restaurar backup: ' + (res && res.error ? res.error : 'desconocido'))
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+      alert('Error al restaurar backup')
     } finally {
       setLoading(false)
     }
@@ -92,6 +140,19 @@ export default function Settings() {
         <div className="mt-4 flex gap-2">
           <Button onClick={handleSave} disabled={loading}>Guardar ajustes</Button>
           <Button onClick={handleBackupNow} variant="ghost" disabled={loading}>Crear backup ahora</Button>
+        </div>
+
+        <div className="mt-6">
+          <h4 className="text-lg font-medium">Restaurar backup</h4>
+          <div className="mt-2 flex gap-2 items-center">
+            <select className="p-2 border rounded w-full" value={selectedBackup} onChange={e => setSelectedBackup(e.target.value)}>
+              {backups.map(b => (
+                <option key={b.path} value={b.path}>{b.name} — {new Date(b.mtime).toLocaleString()}</option>
+              ))}
+            </select>
+            <Button onClick={fetchBackups} variant="ghost" disabled={loading}>Listar</Button>
+            <Button onClick={handleRestore} disabled={loading}>Restaurar</Button>
+          </div>
         </div>
       </Card>
     </div>
