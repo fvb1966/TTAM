@@ -1,27 +1,30 @@
 import React from 'react'
 import { Home, Users, CreditCard, Trophy, FileText, Database, Settings, LogOut } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { useTranslation } from 'react-i18next'
 
-type NavItem = { key: string; title: string; header?: boolean; icon?: React.ReactNode }
+type NavItem = { key: string; title?: string; titleKey?: string; header?: boolean; icon?: React.ReactNode }
 
 const nav: NavItem[] = [
-  { key: 'dashboard', title: 'Dashboard', icon: <Home size={16} /> },
-  { key: 'academy', title: 'ACADEMIA', header: true },
-  { key: 'alumnos', title: 'Alumnos', icon: <Users size={16} /> },
-  { key: 'pagos', title: 'Pagos', icon: <CreditCard size={16} /> },
-  { key: 'torneos_header', title: 'TORNEOS', header: true },
-  { key: 'torneos_list', title: 'Torneos', icon: <Trophy size={16} /> },
-  { key: 'inscripciones', title: 'Inscripciones', icon: <FileText size={16} /> },
-  { key: 'participantes', title: 'Participantes', icon: <Users size={16} /> },
-  { key: 'grupos', title: 'Grupos', icon: <Database size={16} /> },
-  { key: 'partidos', title: 'Partidos', icon: <FileText size={16} /> },
-  { key: 'reportes', title: 'REPORTES', header: true },
-  { key: 'backups', title: 'BACKUPS', icon: <Database size={16} /> },
-  { key: 'config', title: 'CONFIGURACIÓN', icon: <Settings size={16} /> },
-  { key: 'exit', title: 'SALIR', icon: <LogOut size={16} /> },
+  { key: 'dashboard', titleKey: 'sidebar.dashboard', icon: <Home size={16} /> },
+  { key: 'academy', titleKey: 'sidebar.academy', header: true },
+  { key: 'alumnos', titleKey: 'sidebar.alumnos', icon: <Users size={16} /> },
+  { key: 'pagos', titleKey: 'sidebar.pagos', icon: <CreditCard size={16} /> },
+  { key: 'torneos_header', titleKey: 'sidebar.torneos', header: true },
+  { key: 'torneos_list', titleKey: 'sidebar.torneos', icon: <Trophy size={16} /> },
+  { key: 'inscripciones', titleKey: 'sidebar.inscripciones', icon: <FileText size={16} /> },
+  { key: 'participantes', titleKey: 'sidebar.participantes', icon: <Users size={16} /> },
+  { key: 'grupos', titleKey: 'sidebar.grupos', icon: <Database size={16} /> },
+  { key: 'partidos', titleKey: 'sidebar.partidos', icon: <FileText size={16} /> },
+  { key: 'reportes', titleKey: 'sidebar.reportes', header: true },
+  { key: 'backups', titleKey: 'sidebar.backups', icon: <Database size={16} /> },
+  { key: 'config', titleKey: 'sidebar.config', icon: <Settings size={16} /> },
+  { key: 'exit', titleKey: 'sidebar.exit', icon: <LogOut size={16} /> },
 ]
 
 export default function Sidebar({ current, onSelect }: { current?: string; onSelect?: (k: string) => void }) {
+  const { t } = useTranslation()
+
   return (
     <aside className="w-64 bg-white border-r p-4">
       <div className="mb-6 text-lg font-semibold">TTAM</div>
@@ -36,7 +39,7 @@ export default function Sidebar({ current, onSelect }: { current?: string; onSel
             )}
           >
             {item.icon && <span className="text-slate-500">{item.icon}</span>}
-            <span>{item.title}</span>
+            <span>{item.titleKey ? t(item.titleKey) : item.title}</span>
           </div>
         ))}
       </nav>

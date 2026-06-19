@@ -7,6 +7,47 @@ const resources = {
         email: 'Email',
         phone: 'Phone',
       },
+      header: {
+        searchPlaceholder: 'Search...'
+      },
+      sidebar: {
+        dashboard: 'Dashboard',
+        academy: 'Academy',
+        alumnos: 'Students',
+        pagos: 'Payments',
+        torneos: 'Tournaments',
+        inscripciones: 'Registrations',
+        participantes: 'Participants',
+        grupos: 'Groups',
+        partidos: 'Matches',
+        reportes: 'Reports',
+        backups: 'Backups',
+        config: 'Settings',
+        exit: 'Exit',
+      },
+      buttons: {
+        createStudent: 'Create student',
+        create: 'Create',
+        registerPayment: 'Register payment',
+        exportErrors: 'Export errors'
+      },
+      pagos: {
+        title: 'Payments',
+        studentLabel: 'Student',
+        amountLabel: 'Amount (ARS)',
+        latestPayments: 'Latest payments',
+        studentUnknown: 'Unknown student'
+      },
+      torneos: {
+        title: 'Tournaments',
+        nameLabel: 'Name',
+        startLabel: 'Start',
+        endLabel: 'End',
+        existingTournaments: 'Existing tournaments'
+      },
+      alumnos: {
+        title: 'Students'
+      },
       import: {
         error: {
           missingFields: 'Row must contain at least firstName, email or phone',
@@ -31,6 +72,47 @@ const resources = {
         lastName: 'Apellido',
         email: 'Email',
         phone: 'Teléfono',
+      },
+      header: {
+        searchPlaceholder: 'Buscar...'
+      },
+      sidebar: {
+        dashboard: 'Inicio',
+        academy: 'Academia',
+        alumnos: 'Alumnos',
+        pagos: 'Pagos',
+        torneos: 'Torneos',
+        inscripciones: 'Inscripciones',
+        participantes: 'Participantes',
+        grupos: 'Grupos',
+        partidos: 'Partidos',
+        reportes: 'Reportes',
+        backups: 'Backups',
+        config: 'Configuración',
+        exit: 'Salir',
+      },
+      buttons: {
+        createStudent: 'Crear alumno',
+        create: 'Crear',
+        registerPayment: 'Registrar pago',
+        exportErrors: 'Exportar errores'
+      },
+      pagos: {
+        title: 'Pagos',
+        studentLabel: 'Alumno',
+        amountLabel: 'Monto (ARS)',
+        latestPayments: 'Últimos pagos',
+        studentUnknown: 'Alumno desconocido'
+      },
+      torneos: {
+        title: 'Torneos',
+        nameLabel: 'Nombre',
+        startLabel: 'Inicio',
+        endLabel: 'Fin',
+        existingTournaments: 'Torneos existentes'
+      },
+      alumnos: {
+        title: 'Alumnos'
       },
       import: {
         error: {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
@@ -13,6 +14,7 @@ type Student = {
 }
 
 export default function Alumnos() {
+  const { t } = useTranslation()
   const [students, setStudents] = useState<Student[]>([])
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -40,20 +42,20 @@ export default function Alumnos() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-medium">Alumnos</h3>
+      <h3 className="text-xl font-medium">{t('alumnos.title')}</h3>
 
       <Card>
         <form onSubmit={handleCreate} className="mt-0 space-y-2 max-w-lg">
           <div className="flex gap-2">
-            <Input placeholder="Nombre" value={firstName} onChange={e => setFirstName(e.target.value)} required className="flex-1" />
-            <Input placeholder="Apellido" value={lastName} onChange={e => setLastName(e.target.value)} className="flex-1" />
+            <Input placeholder={t('fields.firstName') as string} value={firstName} onChange={e => setFirstName(e.target.value)} required className="flex-1" />
+            <Input placeholder={t('fields.lastName') as string} value={lastName} onChange={e => setLastName(e.target.value)} className="flex-1" />
           </div>
           <div className="flex gap-2">
-            <Input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="flex-1" />
-            <Input placeholder="Teléfono" value={phone} onChange={e => setPhone(e.target.value)} className="flex-1" />
+            <Input placeholder={t('fields.email') as string} value={email} onChange={e => setEmail(e.target.value)} className="flex-1" />
+            <Input placeholder={t('fields.phone') as string} value={phone} onChange={e => setPhone(e.target.value)} className="flex-1" />
           </div>
           <div>
-            <Button type="submit">Crear alumno</Button>
+            <Button type="submit">{t('buttons.createStudent')}</Button>
           </div>
         </form>
       </Card>
@@ -63,9 +65,9 @@ export default function Alumnos() {
           <thead>
             <tr className="text-left">
               <th className="p-2">ID</th>
-              <th className="p-2">Nombre</th>
-              <th className="p-2">Email</th>
-              <th className="p-2">Teléfono</th>
+              <th className="p-2">{t('fields.firstName')} {t('fields.lastName')}</th>
+              <th className="p-2">{t('fields.email')}</th>
+              <th className="p-2">{t('fields.phone')}</th>
             </tr>
           </thead>
           <tbody>

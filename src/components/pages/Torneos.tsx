@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
@@ -6,6 +7,7 @@ import Card from '@/components/ui/Card'
 type Tournament = { id: number; name: string; startDate?: string; endDate?: string }
 
 export default function Torneos() {
+  const { t } = useTranslation()
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [name, setName] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -29,30 +31,30 @@ export default function Torneos() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-medium">Torneos</h3>
+      <h3 className="text-xl font-medium">{t('torneos.title')}</h3>
 
       <Card>
         <form onSubmit={handleCreate} className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="block text-sm">Nombre</label>
+            <label className="block text-sm">{t('torneos.nameLabel')}</label>
             <Input value={name} onChange={e => setName(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm">Inicio</label>
+            <label className="block text-sm">{t('torneos.startLabel')}</label>
             <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
           </div>
           <div>
-            <label className="block text-sm">Fin</label>
+            <label className="block text-sm">{t('torneos.endLabel')}</label>
             <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
           </div>
           <div>
-            <Button type="submit">Crear</Button>
+            <Button type="submit">{t('buttons.create')}</Button>
           </div>
         </form>
       </Card>
 
       <Card>
-        <h4 className="text-lg font-medium">Torneos existentes</h4>
+        <h4 className="text-lg font-medium">{t('torneos.existingTournaments')}</h4>
         <ul className="mt-2 space-y-2">
           {tournaments.map(t => (
             <li key={t.id} className="p-2 border rounded">{t.name} {t.startDate ? `— ${new Date(t.startDate).toLocaleDateString()}` : ''}</li>
