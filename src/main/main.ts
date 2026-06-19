@@ -1,8 +1,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import * as path from 'path'
 import fs from 'fs'
-import archiver from 'archiver'
 import { prisma } from './prisma'
+import { importRegistrations } from './importer'
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -52,32 +52,47 @@ app.whenReady().then(() => {
   // CSV import: rows is an array of objects with firstName,lastName,email,phone
   ipcMain.handle('db:importRegistrations', async (_event, payload) => {
     const { tournamentId, rows } = payload
-    const results: any[] = []
-    for (const r of rows) {
-      const firstName = r.firstName || r.nombre || ''
-      const lastName = r.lastName || r.apellido || ''
-      const email = r.email || r.Email || null
-      const phone = r.phone || r.telefono || null
+    return importRegistrations(prisma, tournamentId, rows)
+  })
 
-      let student = null
-      if (email) {
-        student = await prisma.student.findUnique({ where: { email } }).catch(() => null)
+  // Locale handlers to sync i18n between renderer and main
+  ipcMain.handle('app:setLocale', async (_event, locale: string) => {
+    try {
+      // change main i18n language and persist to config
+      const mainI18n = await import('./i18n')
+      await mainI18n.default.changeLanguage(locale)
+      try {
+        const cfg = await import('./config')
+        await cfg.setLocaleInConfig(locale)
+      } catch (e) {
+        // ignore config write errors
       }
-      if (!student && phone) {
-        student = await prisma.student.findFirst({ where: { phone } }).catch(() => null)
-      }
-      if (!student) {
-        student = await prisma.student.create({ data: { firstName: firstName || 'N/A', lastName, email, phone } })
-      }
-
-      const registration = await prisma.registration.create({ data: { tournamentId, studentId: student.id } })
-      results.push({ studentId: student.id, registrationId: registration.id })
+      return mainI18n.default.language
+    } catch (e) {
+      return null
     }
-    return { imported: results.length, details: results }
+  })
+
+  ipcMain.handle('app:getLocale', async () => {
+    try {
+      // prefer stored config locale
+      try {
+        const cfg = await import('./config')
+        const stored = await cfg.getLocaleFromConfig()
+        if (stored) return stored
+      } catch (e) {
+        // ignore
+      }
+      const mainI18n = await import('./i18n')
+      return mainI18n.default.language
+    } catch (e) {
+      return 'es'
+    }
   })
 
   // Backup: zip data and Docs into Docs/backup/ttam-backup-<timestamp>.zip
   ipcMain.handle('backup:create', async () => {
+    const archiver = await import('archiver')
     const backupDir = path.join(process.cwd(), 'Docs', 'backup')
     await fs.promises.mkdir(backupDir, { recursive: true })
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -85,7 +100,7 @@ app.whenReady().then(() => {
 
     return new Promise((resolve, reject) => {
       const output = fs.createWriteStream(outPath)
-      const archive = archiver('zip', { zlib: { level: 9 } })
+      const archive = archiver.default ? archiver.default('zip', { zlib: { level: 9 } }) : archiver('zip', { zlib: { level: 9 } })
 
       output.on('close', () => resolve(outPath))
       archive.on('error', err => reject(err))
