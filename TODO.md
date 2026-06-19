@@ -13,6 +13,14 @@ Resumen rápido:
 - Stack aprobado: Electron, React + TypeScript, Vite, Tailwind, shadcn/ui, SQLite + Prisma, React Hook Form, Zod, Zustand, TanStack Table, jsPDF, xlsx.
 - Tests: `vitest`.
 
+## Estado actual (2026-06-18)
+
+- Fase 0 — Foundation: scaffold, Vite/Electron/TypeScript, estructura y `data/ttam.db` — COMPLETADO.
+- ESLint / Prettier: archivos de configuración añadidos (`.eslintrc.cjs`, `.prettierrc`, `.eslintignore`, `.prettierignore`) y scripts `lint`, `lint:fix`, `format` en `package.json` — CONFIGURADO (hay advertencias/errores de lint pendientes de corrección).
+- Vitest: tests unitarios presentes y ejecutados (importer tests pasan) — OK.
+- i18n: preferencia de idioma persistida en `localStorage` y sincronizada con `app.getPath('userData')/config.json` — IMPLEMENTADO.
+
+
 Acciones iniciales (alto nivel):
 1. Fase 0 — Foundation
    - Inicializar repositorio, estructura de carpetas y configuración base (Vite + Electron + TypeScript).
