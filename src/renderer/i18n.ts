@@ -9,4 +9,32 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 })
 
+// Sync initial locale with localStorage or main process if available
+;(async () => {
+  try {
+    const win = window as any
+    const stored = localStorage.getItem('ttam:locale')
+    if (stored) {
+      await i18n.changeLanguage(stored)
+      if (win?.ttam?.setLocale) await win.ttam.setLocale(stored)
+    } else if (win?.ttam?.getLocale) {
+      const locale = await win.ttam.getLocale()
+      if (locale) await i18n.changeLanguage(locale)
+    }
+  } catch (e) {
+    // ignore
+  }
+})()
+
+// Persist changes to localStorage and notify main process
+i18n.on('languageChanged', (lng) => {
+  try {
+    localStorage.setItem('ttam:locale', lng)
+    const win = window as any
+    if (win?.ttam?.setLocale) win.ttam.setLocale(lng)
+  } catch (e) {
+    // ignore
+  }
+})
+
 export default i18n
