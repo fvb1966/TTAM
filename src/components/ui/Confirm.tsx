@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useRef, useState, ReactNode } from 'react'
 
-type ConfirmOptions = {
+export type ConfirmOptions = {
   title?: string
   confirmLabel?: string
   cancelLabel?: string
 }
 
-type ConfirmContextType = {
+export type ConfirmContextType = {
   confirm: (message: string, opts?: ConfirmOptions) => Promise<boolean>
 }
 
