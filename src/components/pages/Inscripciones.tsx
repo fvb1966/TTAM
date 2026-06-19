@@ -11,6 +11,9 @@ export default function Inscripciones() {
   const [headers, setHeaders] = useState<string[]>([])
   const [mapping, setMapping] = useState<{ firstName?: string; lastName?: string; email?: string; phone?: string }>({})
   const [preview, setPreview] = useState<any[]>([])
+  const [errors, setErrors] = useState<any[]>([])
+  const [importResult, setImportResult] = useState<any | null>(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => { loadTournaments() }, [])
 
@@ -50,8 +53,18 @@ export default function Inscripciones() {
       email: mapping.email ? r[mapping.email] : undefined,
       phone: mapping.phone ? r[mapping.phone] : undefined,
     }))
-    const result = await window.ttam.db.importRegistrations({ tournamentId, rows })
-    alert(`Importadas: ${result.imported}`)
+    setLoading(true)
+    try {
+      const result = await window.ttam.db.importRegistrations({ tournamentId, rows })
+      setImportResult(result)
+      setErrors(result.errors || [])
+      alert(`Importadas: ${result.imported}`)
+    } catch (e) {
+      console.error(e)
+      alert('Error durante la importación')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -74,10 +87,36 @@ export default function Inscripciones() {
           </div>
 
           <div>
-            <Button onClick={handleImport}>Importar</Button>
+            <Button onClick={handleImport} disabled={loading || !tournamentId || !csvData.length}>{loading ? 'Importando...' : 'Importar'}</Button>
           </div>
         </div>
       </Card>
+
+      {importResult && (
+        <Card>
+          <h4 className="text-sm font-medium">Resultado de importación</h4>
+          <div className="mt-2">
+            <div>Importadas: {importResult.imported}</div>
+            <div>Detalles: {importResult.details ? importResult.details.length : 0}</div>
+          </div>
+        </Card>
+      )}
+
+      {errors.length > 0 && (
+        <Card>
+          <h4 className="text-sm font-medium text-red-600">Errores ({errors.length})</h4>
+          <div className="mt-2 overflow-auto">
+            <ul className="space-y-2">
+              {errors.map((err, idx) => (
+                <li key={idx} className="p-2 border rounded">
+                  <div className="font-semibold">Fila: {err.index}</div>
+                  <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(err.issues, null, 2)}</pre>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+      )}
 
       {headers.length > 0 && (
         <Card>
