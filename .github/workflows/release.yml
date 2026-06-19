@@ -56,3 +56,13 @@ jobs:
             out
             release
           if-no-files-found: warn
+
+      - name: Create GitHub Release and upload packaged artifacts
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            out/**
+            dist/**
+            release/**
