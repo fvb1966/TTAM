@@ -30,6 +30,13 @@ app.whenReady().then(() => {
     const { firstName, lastName, email, phone } = payload
     return prisma.student.create({ data: { firstName, lastName, email, phone } })
   })
+  ipcMain.handle('db:updateStudent', async (_event, payload) => {
+    const { id, firstName, lastName, email, phone, active } = payload || {}
+    return prisma.student.update({ where: { id }, data: { firstName, lastName, email, phone, active } })
+  })
+  ipcMain.handle('db:deleteStudent', async (_event, id) => {
+    return prisma.student.delete({ where: { id } })
+  })
 
   ipcMain.handle('db:getPayments', async () => {
     return prisma.payment.findMany({ orderBy: { paidAt: 'desc' }, include: { student: true } })

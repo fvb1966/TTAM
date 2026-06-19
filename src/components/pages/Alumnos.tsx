@@ -20,6 +20,11 @@ export default function Alumnos() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editFirstName, setEditFirstName] = useState('')
+  const [editLastName, setEditLastName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editPhone, setEditPhone] = useState('')
 
   const load = async () => {
     const list = await window.ttam.db.getStudents()
@@ -46,6 +51,42 @@ export default function Alumnos() {
     load()
   }
 
+  const startEdit = (s: Student) => {
+    setEditingId(s.id)
+    setEditFirstName(s.firstName)
+    setEditLastName(s.lastName || '')
+    setEditEmail(s.email || '')
+    setEditPhone(s.phone || '')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditFirstName('')
+    setEditLastName('')
+    setEditEmail('')
+    setEditPhone('')
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingId) return
+    await window.ttam.db.updateStudent({ id: editingId, firstName: editFirstName, lastName: editLastName || null, email: editEmail || null, phone: editPhone || null })
+    cancelEdit()
+    load()
+  }
+
+  const handleDeleteStudent = async (id: number) => {
+    if (!confirm('¿Eliminar alumno?')) return
+    try {
+      await window.ttam.db.deleteStudent(id)
+      load()
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+      alert('Error al borrar alumno')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-medium">{t('alumnos.title')}</h3>
@@ -66,6 +107,26 @@ export default function Alumnos() {
         </form>
       </Card>
 
+      {editingId && (
+        <Card>
+          <h4 className="text-sm font-medium">Editar alumno</h4>
+          <form onSubmit={handleUpdate} className="mt-2 space-y-2 max-w-lg">
+            <div className="flex gap-2">
+              <Input placeholder={t('fields.firstName') as string} value={editFirstName} onChange={e => setEditFirstName(e.target.value)} required className="flex-1" />
+              <Input placeholder={t('fields.lastName') as string} value={editLastName} onChange={e => setEditLastName(e.target.value)} className="flex-1" />
+            </div>
+            <div className="flex gap-2">
+              <Input placeholder={t('fields.email') as string} value={editEmail} onChange={e => setEditEmail(e.target.value)} className="flex-1" />
+              <Input placeholder={t('fields.phone') as string} value={editPhone} onChange={e => setEditPhone(e.target.value)} className="flex-1" />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit">Guardar</Button>
+              <Button type="button" variant="ghost" onClick={cancelEdit}>Cancelar</Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
       <Card>
         <Table>
           <thead>
@@ -74,6 +135,7 @@ export default function Alumnos() {
               <th className="p-2">{t('fields.firstName')} {t('fields.lastName')}</th>
               <th className="p-2">{t('fields.email')}</th>
               <th className="p-2">{t('fields.phone')}</th>
+              <th className="p-2">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -83,6 +145,12 @@ export default function Alumnos() {
                 <td className="p-2">{s.firstName} {s.lastName}</td>
                 <td className="p-2">{s.email}</td>
                 <td className="p-2">{s.phone}</td>
+                <td className="p-2">
+                  <div className="flex gap-2">
+                    <Button variant="ghost" onClick={() => startEdit(s)}>Editar</Button>
+                    <Button variant="destructive" onClick={() => handleDeleteStudent(s.id)}>Borrar</Button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
