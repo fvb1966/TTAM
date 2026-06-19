@@ -3,6 +3,7 @@ import * as path from 'path'
 import fs from 'fs'
 import { prisma } from './prisma'
 import { importRegistrations } from './importer'
+import { readConfig, writeConfig } from './config'
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -129,10 +130,44 @@ app.whenReady().then(() => {
     }
   })
 
+  // Settings: read/write config and expose useful paths
+  ipcMain.handle('app:getSettings', async () => {
+    try {
+      const cfg = await readConfig()
+      return cfg
+    } catch {
+      return {}
+    }
+  })
+
+  ipcMain.handle('app:setSettings', async (_event, payload) => {
+    try {
+      const current = await readConfig()
+      const next = { ...(current || {}), ...(payload || {}) }
+      await writeConfig(next)
+      return next
+    } catch (err) {
+      return null
+    }
+  })
+
+  ipcMain.handle('app:getPaths', async () => {
+    try {
+      const cfg = await readConfig()
+      const dbPath = path.join(process.cwd(), 'data', 'ttam.db')
+      const backupDir = cfg && cfg.backupDir ? path.resolve(String(cfg.backupDir)) : path.join(process.cwd(), 'Docs', 'backup')
+      return { dbPath, backupDir }
+    } catch {
+      return { dbPath: path.join(process.cwd(), 'data', 'ttam.db'), backupDir: path.join(process.cwd(), 'Docs', 'backup') }
+    }
+  })
+
   // Backup: zip data and Docs into Docs/backup/ttam-backup-<timestamp>.zip
   ipcMain.handle('backup:create', async () => {
     const archiver = await import('archiver')
-    const backupDir = path.join(process.cwd(), 'Docs', 'backup')
+    // allow override via config.backupDir
+    const cfg = await readConfig()
+    const backupDir = cfg && cfg.backupDir ? path.resolve(String(cfg.backupDir)) : path.join(process.cwd(), 'Docs', 'backup')
     await fs.promises.mkdir(backupDir, { recursive: true })
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const outPath = path.join(backupDir, `ttam-backup-${timestamp}.zip`)

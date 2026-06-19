@@ -23,6 +23,11 @@ contextBridge.exposeInMainWorld('ttam', {
   backup: {
     create: () => ipcRenderer.invoke('backup:create'),
   },
+  settings: {
+    get: () => ipcRenderer.invoke('app:getSettings'),
+    set: (payload: unknown) => ipcRenderer.invoke('app:setSettings', payload as Record<string, unknown>),
+    paths: () => ipcRenderer.invoke('app:getPaths'),
+  },
   // Locale management
   setLocale: (locale: string) => ipcRenderer.invoke('app:setLocale', locale),
   getLocale: () => ipcRenderer.invoke('app:getLocale'),
