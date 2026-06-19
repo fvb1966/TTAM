@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import i18n from './i18n'
 
 export async function importRegistrations(prisma: any, tournamentId: number, rows: any[]) {
   const preprocessTrimEmpty = <T extends z.ZodTypeAny>(schema: T) =>
@@ -30,35 +31,28 @@ export async function importRegistrations(prisma: any, tournamentId: number, row
   for (const [idx, row] of rows.entries()) {
     const parsed = rowSchema.safeParse(row)
     if (!parsed.success) {
-      // Convertir issues de Zod a mensajes legibles en español
-      const fieldNameMap: Record<string, string> = {
-        firstName: 'Nombre',
-        lastName: 'Apellido',
-        email: 'Email',
-        phone: 'Teléfono',
-      }
-
+      // Convertir issues de Zod a mensajes legibles usando i18n
       const issues = parsed.error.issues.map(i => {
         const field = (i.path && i.path.length > 0) ? String(i.path[0]) : undefined
-        const fieldLabel = field ? (fieldNameMap[field] ?? field) : '(registro)'
+        const fieldLabel = field ? i18n.t(`fields.${field}`) : '(registro)'
         const message = i.message || 'Error de validación'
 
-        // Friendly Spanish message
+        // Friendly Spanish message using i18n keys
         let friendly = ''
         const code = i.code
         const raw = (i.message || '').toString()
 
         if (code === 'custom' || raw.includes('Row must contain')) {
-          friendly = 'El registro debe contener al menos Nombre, Email o Teléfono.'
+          friendly = i18n.t('import.error.missingFields')
         } else if (code === 'invalid_type') {
-          friendly = `El campo ${fieldLabel} tiene un tipo inválido.`
+          friendly = i18n.t('import.error.invalidType', { field: fieldLabel })
         } else if (code === 'invalid_string' || raw.toLowerCase().includes('invalid')) {
-          if (raw.toLowerCase().includes('email')) friendly = `El campo ${fieldLabel} debe ser un correo electrónico válido.`
-          else friendly = `El campo ${fieldLabel} tiene un valor inválido.`
+          if (raw.toLowerCase().includes('email')) friendly = i18n.t('import.error.invalidEmail', { field: fieldLabel })
+          else friendly = i18n.t('import.error.invalidValue', { field: fieldLabel })
         } else if (code === 'too_small') {
-          friendly = `El campo ${fieldLabel} no cumple la longitud mínima.`
+          friendly = i18n.t('import.error.tooSmall', { field: fieldLabel })
         } else if (code === 'too_big') {
-          friendly = `El campo ${fieldLabel} excede la longitud máxima.`
+          friendly = i18n.t('import.error.tooBig', { field: fieldLabel })
         } else {
           friendly = message
         }

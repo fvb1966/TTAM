@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Papa from 'papaparse'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 export default function Inscripciones() {
+  const { t } = useTranslation()
   const [tournaments, setTournaments] = useState<any[]>([])
   const [tournamentId, setTournamentId] = useState<number | null>(null)
   const [csvData, setCsvData] = useState<any[]>([])
@@ -45,8 +47,8 @@ export default function Inscripciones() {
   }
 
   const handleImport = async () => {
-    if (!tournamentId) return alert('Seleccione un torneo')
-    if (!csvData.length) return alert('Cargue un CSV')
+    if (!tournamentId) return alert(t('inscriptions.selectTournamentAlert'))
+    if (!csvData.length) return alert(t('inscriptions.uploadCsvAlert'))
     const rows = csvData.map(r => ({
       firstName: mapping.firstName ? r[mapping.firstName] : undefined,
       lastName: mapping.lastName ? r[mapping.lastName] : undefined,
@@ -58,10 +60,10 @@ export default function Inscripciones() {
       const result = await window.ttam.db.importRegistrations({ tournamentId, rows })
       setImportResult(result)
       setErrors(result.errors || [])
-      alert(`Importadas: ${result.imported}`)
+      alert(t('inscriptions.importedCount', { count: result.imported }))
     } catch (e) {
       console.error(e)
-      alert('Error durante la importación')
+      alert(t('inscriptions.importError'))
     } finally {
       setLoading(false)
     }
@@ -69,14 +71,14 @@ export default function Inscripciones() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-medium">Inscripciones (Importar CSV)</h3>
+      <h3 className="text-xl font-medium">{t('inscriptions.title')}</h3>
 
       <Card>
         <div className="flex gap-4 items-end">
-          <div>
+            <div>
             <label className="block text-sm">Torneo</label>
             <select value={tournamentId ?? ''} onChange={e => setTournamentId(Number(e.target.value) || null)} className="p-2 border rounded">
-              <option value="">Seleccionar</option>
+              <option value="">{t('inscriptions.selectPlaceholder')}</option>
               {tournaments.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </div>
@@ -87,16 +89,16 @@ export default function Inscripciones() {
           </div>
 
           <div>
-            <Button onClick={handleImport} disabled={loading || !tournamentId || !csvData.length}>{loading ? 'Importando...' : 'Importar'}</Button>
+            <Button onClick={handleImport} disabled={loading || !tournamentId || !csvData.length}>{loading ? t('inscriptions.importing') : t('inscriptions.import')}</Button>
           </div>
         </div>
       </Card>
 
       {importResult && (
         <Card>
-          <h4 className="text-sm font-medium">Resultado de importación</h4>
+          <h4 className="text-sm font-medium">{t('inscriptions.resultTitle')}</h4>
           <div className="mt-2">
-            <div>Importadas: {importResult.imported}</div>
+            <div>{t('inscriptions.importedCount', { count: importResult.imported })}</div>
             <div>Detalles: {importResult.details ? importResult.details.length : 0}</div>
           </div>
         </Card>
@@ -105,7 +107,7 @@ export default function Inscripciones() {
       {errors.length > 0 && (
         <Card>
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium text-red-600">Errores ({errors.length})</h4>
+            <h4 className="text-sm font-medium text-red-600">{t('inscriptions.errorsTitle', { count: errors.length })}</h4>
             <div>
               <Button onClick={() => {
                 // exportar errores a CSV
@@ -124,7 +126,7 @@ export default function Inscripciones() {
                 a.click()
                 a.remove()
                 URL.revokeObjectURL(url)
-              }}>Exportar errores</Button>
+              }}>{t('inscriptions.exportButton')}</Button>
             </div>
           </div>
 
@@ -133,7 +135,7 @@ export default function Inscripciones() {
               {errors.map((err, idx) => (
                 <li key={idx} className="p-2 border rounded">
                   <div className="font-semibold">Fila: {err.index}</div>
-                  {err.row && <div className="text-xs mb-2">Registro: <pre className="whitespace-pre-wrap">{JSON.stringify(err.row)}</pre></div>}
+                  {err.row && <div className="text-xs mb-2">{t('inscriptions.record')} <pre className="whitespace-pre-wrap">{JSON.stringify(err.row)}</pre></div>}
                   <ul className="text-sm list-disc pl-5">
                     {err.issues.map((i: any, ii: number) => (
                           <li key={ii}>{i.friendly ? i.friendly : `${i.fieldLabel}: ${i.message}`}</li>
@@ -148,31 +150,31 @@ export default function Inscripciones() {
 
       {headers.length > 0 && (
         <Card>
-          <h4 className="text-sm font-medium">Mapeo de columnas</h4>
+          <h4 className="text-sm font-medium">{t('inscriptions.mappingTitle')}</h4>
           <div className="grid grid-cols-2 gap-2 mt-2">
             <div>
-              <label className="block text-xs">Nombre (firstName)</label>
+              <label className="block text-xs">{t('fields.firstName')} (firstName)</label>
               <select value={mapping.firstName || ''} onChange={e => setMapping({ ...mapping, firstName: e.target.value || undefined })} className="p-2 border rounded w-full">
                 <option value="">---</option>
                 {headers.map(h => <option key={h} value={h}>{h}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs">Apellido (lastName)</label>
+              <label className="block text-xs">{t('fields.lastName')} (lastName)</label>
               <select value={mapping.lastName || ''} onChange={e => setMapping({ ...mapping, lastName: e.target.value || undefined })} className="p-2 border rounded w-full">
                 <option value="">---</option>
                 {headers.map(h => <option key={h} value={h}>{h}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs">Email</label>
+              <label className="block text-xs">{t('fields.email')}</label>
               <select value={mapping.email || ''} onChange={e => setMapping({ ...mapping, email: e.target.value || undefined })} className="p-2 border rounded w-full">
                 <option value="">---</option>
                 {headers.map(h => <option key={h} value={h}>{h}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs">Teléfono</label>
+              <label className="block text-xs">{t('fields.phone')}</label>
               <select value={mapping.phone || ''} onChange={e => setMapping({ ...mapping, phone: e.target.value || undefined })} className="p-2 border rounded w-full">
                 <option value="">---</option>
                 {headers.map(h => <option key={h} value={h}>{h}</option>)}
@@ -184,7 +186,7 @@ export default function Inscripciones() {
 
       {preview.length > 0 && (
         <Card>
-          <h4 className="text-sm font-medium">Vista previa</h4>
+          <h4 className="text-sm font-medium">{t('inscriptions.previewTitle')}</h4>
           <div className="mt-2 overflow-auto">
             <table className="min-w-full text-sm">
               <thead>
