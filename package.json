@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "description": "Table Tennis Academy Manager (TTAM) - Electron + Vite + React",
-  "main": "src/main/main.ts",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "start": "electron .",
-    "electron:dev": "concurrently \"npm:dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "build:main": "esbuild src/main/main.ts --bundle --platform=node --outfile=dist/main.js --external:electron --sourcemap && esbuild src/main/preload.ts --bundle --platform=node --outfile=dist/preload.js --sourcemap",
+    "build:main:watch": "concurrently \"esbuild src/main/main.ts --bundle --platform=node --outfile=dist/main.js --external:electron --sourcemap --watch\" \"esbuild src/main/preload.ts --bundle --platform=node --outfile=dist/preload.js --sourcemap --watch\"",
+    "electron:dev": "concurrently \"npm:dev\" \"npm:build:main:watch\" \"wait-on http://localhost:5173 && electron .\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest"
@@ -54,6 +56,6 @@
     "esbuild": "^0.19.4",
     "eslint": "^8.45.0",
     "prettier": "^2.8.8",
-    "eslint-config-prettier": "^9.2.0"
+    "eslint-config-prettier": "^10.1.8"
   }
 }
