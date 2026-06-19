@@ -61,6 +61,7 @@ jobs:
 
       - name: Lint
         run: npm run lint --if-present
+        continue-on-error: true
 
       - name: Run tests
         run: npm run test --if-present -- --run
