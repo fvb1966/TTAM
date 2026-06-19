@@ -30,6 +30,13 @@ contextBridge.exposeInMainWorld('ttam', {
     set: (payload: unknown) => ipcRenderer.invoke('app:setSettings', payload as Record<string, unknown>),
     paths: () => ipcRenderer.invoke('app:getPaths'),
   },
+  auth: {
+    hasAdmin: () => ipcRenderer.invoke('auth:hasAdmin'),
+    createAdmin: (payload: unknown) => ipcRenderer.invoke('auth:createAdmin', payload as Record<string, unknown>),
+    login: (payload: unknown) => ipcRenderer.invoke('auth:login', payload as Record<string, unknown>),
+    me: () => ipcRenderer.invoke('auth:me'),
+    logout: () => ipcRenderer.invoke('auth:logout'),
+  },
   // Locale management
   setLocale: (locale: string) => ipcRenderer.invoke('app:setLocale', locale),
   getLocale: () => ipcRenderer.invoke('app:getLocale'),

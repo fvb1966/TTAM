@@ -4,6 +4,7 @@ import fs from 'fs'
 import { prisma } from './prisma'
 import { importRegistrations } from './importer'
 import { readConfig, writeConfig } from './config'
+import * as auth from './auth'
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -93,6 +94,33 @@ app.whenReady().then(() => {
 
   ipcMain.handle('db:deleteRegistration', async (_event, id) => {
     return prisma.registration.delete({ where: { id } })
+  })
+
+  // Authentication handlers (single-admin)
+  ipcMain.handle('auth:hasAdmin', async () => {
+    try {
+      return await auth.hasAdmin()
+    } catch {
+      return false
+    }
+  })
+
+  ipcMain.handle('auth:createAdmin', async (_event, payload) => {
+    const { username, password } = payload || {}
+    return auth.createAdmin(username, password)
+  })
+
+  ipcMain.handle('auth:login', async (_event, payload) => {
+    const { username, password } = payload || {}
+    return auth.login(username, password)
+  })
+
+  ipcMain.handle('auth:me', async () => {
+    return auth.me()
+  })
+
+  ipcMain.handle('auth:logout', async () => {
+    return auth.logout()
   })
 
   // Locale handlers to sync i18n between renderer and main
