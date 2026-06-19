@@ -3,44 +3,57 @@ import { useTranslation } from 'react-i18next'
 import Papa from 'papaparse'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
+
+type Tournament = { id: number; name: string }
+type CsvRow = Record<string, string>
+type ImportIssue = { field?: string; fieldLabel?: string; message: string; code?: string; friendly?: string }
+type ImportError = { index: number; row?: CsvRow; issues: ImportIssue[] }
+type ImportResult = { imported: number; details?: Array<{ studentId: number; registrationId: number }>; errors?: ImportError[] }
 
 export default function Inscripciones() {
   const { t } = useTranslation()
-  const [tournaments, setTournaments] = useState<any[]>([])
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [tournamentId, setTournamentId] = useState<number | null>(null)
-  const [csvData, setCsvData] = useState<any[]>([])
+  const [csvData, setCsvData] = useState<CsvRow[]>([])
   const [headers, setHeaders] = useState<string[]>([])
   const [mapping, setMapping] = useState<{ firstName?: string; lastName?: string; email?: string; phone?: string }>({})
-  const [preview, setPreview] = useState<any[]>([])
-  const [errors, setErrors] = useState<any[]>([])
-  const [importResult, setImportResult] = useState<any | null>(null)
+  const [preview, setPreview] = useState<CsvRow[]>([])
+  const [errors, setErrors] = useState<ImportError[]>([])
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => { loadTournaments() }, [])
 
   const loadTournaments = async () => {
     const list = await window.ttam.db.getTournaments()
-    setTournaments(list)
+    setTournaments(list as Tournament[])
   }
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      if (!mounted) return
+      await loadTournaments()
+    })()
+    return () => { mounted = false }
+  }, [])
 
   const handleFile = (file: File | null) => {
     if (!file) return
-    Papa.parse(file, {
+    Papa.parse<CsvRow>(file, {
       header: true,
       skipEmptyLines: true,
       complete: (res) => {
-        setCsvData(res.data as any[])
-        const h = res.meta.fields || []
-        setHeaders(h as string[])
-        setPreview((res.data as any[]).slice(0, 5))
+        const data = res.data as CsvRow[]
+        setCsvData(data)
+        const h = (res.meta.fields || []) as string[]
+        setHeaders(h)
+        setPreview(data.slice(0, 5))
         // try auto-mapping
-        const lower = h.map((x: string) => (x || '').toLowerCase())
+        const lower = h.map((x) => (x || '').toLowerCase())
         setMapping({
-          firstName: h[lower.findIndex((x: string) => x.includes('nombre') || x.includes('first'))] || undefined,
-          lastName: h[lower.findIndex((x: string) => x.includes('apellido') || x.includes('last'))] || undefined,
-          email: h[lower.findIndex((x: string) => x.includes('email'))] || undefined,
-          phone: h[lower.findIndex((x: string) => x.includes('tel') || x.includes('phone'))] || undefined,
+          firstName: h[lower.findIndex((x) => x.includes('nombre') || x.includes('first'))] || undefined,
+          lastName: h[lower.findIndex((x) => x.includes('apellido') || x.includes('last'))] || undefined,
+          email: h[lower.findIndex((x) => x.includes('email'))] || undefined,
+          phone: h[lower.findIndex((x) => x.includes('tel') || x.includes('phone'))] || undefined,
         })
       }
     })
@@ -57,12 +70,13 @@ export default function Inscripciones() {
     }))
     setLoading(true)
     try {
-      const result = await window.ttam.db.importRegistrations({ tournamentId, rows })
+      const result = (await window.ttam.db.importRegistrations({ tournamentId, rows })) as ImportResult
       setImportResult(result)
       setErrors(result.errors || [])
       alert(t('inscriptions.importedCount', { count: result.imported }))
-    } catch (e) {
-      console.error(e)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
       alert(t('inscriptions.importError'))
     } finally {
       setLoading(false)
@@ -111,7 +125,7 @@ export default function Inscripciones() {
             <div>
               <Button onClick={() => {
                 // exportar errores a CSV
-                const rows = errors.flatMap(err => err.issues.map((i: any) => ({
+                const rows = errors.flatMap(err => err.issues.map((i: ImportIssue) => ({
                   fila: err.index,
                   campo: i.fieldLabel || i.field || '',
                   mensaje: i.friendly || i.message,
@@ -137,7 +151,7 @@ export default function Inscripciones() {
                   <div className="font-semibold">Fila: {err.index}</div>
                   {err.row && <div className="text-xs mb-2">{t('inscriptions.record')} <pre className="whitespace-pre-wrap">{JSON.stringify(err.row)}</pre></div>}
                   <ul className="text-sm list-disc pl-5">
-                    {err.issues.map((i: any, ii: number) => (
+                    {err.issues.map((i: ImportIssue, ii: number) => (
                           <li key={ii}>{i.friendly ? i.friendly : `${i.fieldLabel}: ${i.message}`}</li>
                         ))}
                   </ul>

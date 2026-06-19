@@ -22,7 +22,16 @@ export default function Pagos() {
   }
 
   useEffect(() => {
-    load()
+    let mounted = true
+    ;(async () => {
+      const s = await window.ttam.db.getStudents()
+      if (!mounted) return
+      setStudents(s)
+      const p = await window.ttam.db.getPayments()
+      if (!mounted) return
+      setPayments(p)
+    })()
+    return () => { mounted = false }
   }, [])
 
   const handleCreate = async (e: React.FormEvent) => {

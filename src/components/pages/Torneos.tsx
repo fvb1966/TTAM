@@ -18,7 +18,15 @@ export default function Torneos() {
     setTournaments(list)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      const list = await window.ttam.db.getTournaments()
+      if (!mounted) return
+      setTournaments(list)
+    })()
+    return () => { mounted = false }
+  }, [])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()

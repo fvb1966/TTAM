@@ -1,7 +1,13 @@
 import { z } from 'zod'
+import type { PrismaClient } from '@prisma/client'
 import i18n from './i18n'
 
-export async function importRegistrations(prisma: any, tournamentId: number, rows: any[]) {
+type CsvRow = Record<string, unknown>
+type ImportIssue = { field?: string; fieldLabel?: string; message: string; code?: string; friendly?: string }
+type ImportError = { index: number; row?: CsvRow; issues: ImportIssue[] }
+type ImportResult = { imported: number; details: Array<{ studentId: number; registrationId: number }>; errors: ImportError[] }
+
+export async function importRegistrations(prisma: PrismaClient, tournamentId: number, rows: CsvRow[]): Promise<ImportResult> {
   const preprocessTrimEmpty = <T extends z.ZodTypeAny>(schema: T) =>
     z.preprocess((val) => {
       if (typeof val === 'string') {
@@ -26,14 +32,14 @@ export async function importRegistrations(prisma: any, tournamentId: number, row
     })
 
   const results: Array<{ studentId: number; registrationId: number }> = []
-  const errors: Array<{ index: number; row?: any; issues: Array<{ field?: string; fieldLabel?: string; message: string; code?: string; friendly?: string }> }> = []
+  const errors: ImportError[] = []
 
   for (const [idx, row] of rows.entries()) {
     const parsed = rowSchema.safeParse(row)
     if (!parsed.success) {
       // Convertir issues de Zod a mensajes legibles usando i18n
-      const issues = parsed.error.issues.map(i => {
-        const field = (i.path && i.path.length > 0) ? String(i.path[0]) : undefined
+      const issues: ImportIssue[] = parsed.error.issues.map((i) => {
+        const field = i.path && i.path.length > 0 ? String(i.path[0]) : undefined
         const fieldLabel = field ? i18n.t(`fields.${field}`) : '(registro)'
         const message = i.message || 'Error de validación'
 
@@ -66,24 +72,24 @@ export async function importRegistrations(prisma: any, tournamentId: number, row
 
     const { firstName, lastName, email, phone } = parsed.data
 
-    let student: any | null = null
+    let student: Record<string, unknown> | null = null
     if (email) {
       try {
         student = await prisma.student.findUnique({ where: { email } })
-      } catch (e) {
+      } catch {
         student = null
       }
     }
     if (!student && phone) {
       try {
         student = await prisma.student.findFirst({ where: { phone } })
-      } catch (e) {
+      } catch {
         student = null
       }
     }
 
     if (!student) {
-      const createData: any = { firstName: firstName || 'N/A' }
+      const createData: { firstName: string; lastName?: string; email?: string; phone?: string } = { firstName: firstName || 'N/A' }
       if (lastName) createData.lastName = lastName
       if (email) createData.email = email
       if (phone) createData.phone = phone

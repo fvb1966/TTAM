@@ -5,14 +5,17 @@ contextBridge.exposeInMainWorld('ttam', {
   versions: process.versions,
   db: {
     getStudents: () => ipcRenderer.invoke('db:getStudents'),
-    createStudent: (payload: any) => ipcRenderer.invoke('db:createStudent', payload),
+    createStudent: (payload: unknown) => ipcRenderer.invoke('db:createStudent', payload as Record<string, unknown>),
     getPayments: () => ipcRenderer.invoke('db:getPayments'),
-    createPayment: (payload: any) => ipcRenderer.invoke('db:createPayment', payload),
+    createPayment: (payload: unknown) => ipcRenderer.invoke('db:createPayment', payload as Record<string, unknown>),
     getTournaments: () => ipcRenderer.invoke('db:getTournaments'),
-    createTournament: (payload: any) => ipcRenderer.invoke('db:createTournament', payload),
-    importRegistrations: (payload: any) => ipcRenderer.invoke('db:importRegistrations', payload),
+    createTournament: (payload: unknown) => ipcRenderer.invoke('db:createTournament', payload as Record<string, unknown>),
+    importRegistrations: (payload: unknown) => ipcRenderer.invoke('db:importRegistrations', payload as Record<string, unknown>),
   },
   backup: {
     create: () => ipcRenderer.invoke('backup:create'),
   },
+  // Locale management
+  setLocale: (locale: string) => ipcRenderer.invoke('app:setLocale', locale),
+  getLocale: () => ipcRenderer.invoke('app:getLocale'),
 })

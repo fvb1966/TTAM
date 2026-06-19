@@ -3,6 +3,8 @@ import Input from '@/components/ui/Input'
 import Badge from '@/components/ui/Badge'
 import { useTranslation } from 'react-i18next'
 
+type TTAMWindow = Window & { ttam?: { getLocale?: () => Promise<string>; setLocale?: (l: string) => Promise<string | null> } }
+
 export default function Header() {
   const { t, i18n } = useTranslation()
   const [lang, setLang] = useState<string>(i18n.language || 'es')
@@ -10,12 +12,12 @@ export default function Header() {
 
   useEffect(() => {
     // sync with main if possible
-    const win = window as any
+    const win = window as TTAMWindow
     if (win?.ttam?.getLocale) {
-      win.ttam.getLocale().then((l: string) => {
+      void win.ttam.getLocale().then((l) => {
         if (l && l !== lang) {
           setLang(l)
-          i18n.changeLanguage(l)
+          void i18n.changeLanguage(l)
         }
       }).catch(() => {})
     }
@@ -27,9 +29,9 @@ export default function Header() {
     setLang(l)
     await i18n.changeLanguage(l)
     try {
-      const win = window as any
+      const win = window as TTAMWindow
       if (win?.ttam?.setLocale) await win.ttam.setLocale(l)
-    } catch (e) {
+    } catch {
       // ignore
     }
   }

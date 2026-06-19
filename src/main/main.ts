@@ -64,11 +64,11 @@ app.whenReady().then(() => {
       try {
         const cfg = await import('./config')
         await cfg.setLocaleInConfig(locale)
-      } catch (e) {
+      } catch {
         // ignore config write errors
       }
       return mainI18n.default.language
-    } catch (e) {
+    } catch {
       return null
     }
   })
@@ -80,12 +80,12 @@ app.whenReady().then(() => {
         const cfg = await import('./config')
         const stored = await cfg.getLocaleFromConfig()
         if (stored) return stored
-      } catch (e) {
+      } catch {
         // ignore
       }
       const mainI18n = await import('./i18n')
       return mainI18n.default.language
-    } catch (e) {
+    } catch {
       return 'es'
     }
   })
@@ -128,7 +128,7 @@ app.on('window-all-closed', function () {
 app.on('before-quit', async () => {
   try {
     await prisma.$disconnect()
-  } catch (e) {
+  } catch {
     // ignore
   }
 })

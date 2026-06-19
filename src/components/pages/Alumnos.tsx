@@ -27,7 +27,13 @@ export default function Alumnos() {
   }
 
   useEffect(() => {
-    load()
+    let mounted = true
+    ;(async () => {
+      const list = await window.ttam.db.getStudents()
+      if (!mounted) return
+      setStudents(list)
+    })()
+    return () => { mounted = false }
   }, [])
 
   const handleCreate = async (e: React.FormEvent) => {

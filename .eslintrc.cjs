@@ -25,6 +25,7 @@ module.exports = {
     'react/react-in-jsx-scope': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     'unused-imports/no-unused-imports': 'warn',
+    'react/prop-types': 'off',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
   overrides: [

@@ -12,7 +12,7 @@ i18n.use(initReactI18next).init({
 // Sync initial locale with localStorage or main process if available
 ;(async () => {
   try {
-    const win = window as any
+    const win = window as Window & { ttam?: { setLocale?: (l: string) => Promise<string | null>; getLocale?: () => Promise<string> } }
     const stored = localStorage.getItem('ttam:locale')
     if (stored) {
       await i18n.changeLanguage(stored)
@@ -21,7 +21,7 @@ i18n.use(initReactI18next).init({
       const locale = await win.ttam.getLocale()
       if (locale) await i18n.changeLanguage(locale)
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 })()
@@ -30,9 +30,9 @@ i18n.use(initReactI18next).init({
 i18n.on('languageChanged', (lng) => {
   try {
     localStorage.setItem('ttam:locale', lng)
-    const win = window as any
-    if (win?.ttam?.setLocale) win.ttam.setLocale(lng)
-  } catch (e) {
+    const win = window as Window & { ttam?: { setLocale?: (l: string) => Promise<string | null> } }
+    if (win?.ttam?.setLocale) void win.ttam.setLocale(lng)
+  } catch {
     // ignore
   }
 })
