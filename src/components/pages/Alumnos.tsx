@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
+import Card from '@/components/ui/Card'
+import Table from '@/components/ui/Table'
 
 type Student = {
   id: number
@@ -36,24 +39,27 @@ export default function Alumnos() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <h3 className="text-xl font-medium">Alumnos</h3>
-      <form onSubmit={handleCreate} className="mt-4 space-y-2 max-w-lg">
-        <div className="flex gap-2">
-          <input placeholder="Nombre" value={firstName} onChange={e => setFirstName(e.target.value)} className="flex-1 p-2 border rounded" required />
-          <input placeholder="Apellido" value={lastName} onChange={e => setLastName(e.target.value)} className="flex-1 p-2 border rounded" />
-        </div>
-        <div className="flex gap-2">
-          <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="flex-1 p-2 border rounded" />
-          <input placeholder="Teléfono" value={phone} onChange={e => setPhone(e.target.value)} className="flex-1 p-2 border rounded" />
-        </div>
-        <div>
-          <Button type="submit">Crear alumno</Button>
-        </div>
-      </form>
 
-      <div className="mt-6">
-        <table className="min-w-full text-sm">
+      <Card>
+        <form onSubmit={handleCreate} className="mt-0 space-y-2 max-w-lg">
+          <div className="flex gap-2">
+            <Input placeholder="Nombre" value={firstName} onChange={e => setFirstName(e.target.value)} required className="flex-1" />
+            <Input placeholder="Apellido" value={lastName} onChange={e => setLastName(e.target.value)} className="flex-1" />
+          </div>
+          <div className="flex gap-2">
+            <Input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="flex-1" />
+            <Input placeholder="Teléfono" value={phone} onChange={e => setPhone(e.target.value)} className="flex-1" />
+          </div>
+          <div>
+            <Button type="submit">Crear alumno</Button>
+          </div>
+        </form>
+      </Card>
+
+      <Card>
+        <Table>
           <thead>
             <tr className="text-left">
               <th className="p-2">ID</th>
@@ -72,8 +78,8 @@ export default function Alumnos() {
               </tr>
             ))}
           </tbody>
-        </table>
-      </div>
+        </Table>
+      </Card>
     </div>
   )
 }

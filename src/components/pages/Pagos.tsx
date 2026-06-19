@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
+import Card from '@/components/ui/Card'
 
 type Student = { id: number; firstName: string; lastName?: string }
 type Payment = { id: number; amountCents: number; currency: string; student?: Student; paidAt: string }
@@ -31,29 +33,31 @@ export default function Pagos() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <h3 className="text-xl font-medium">Pagos</h3>
 
-      <form onSubmit={handleCreate} className="mt-4 flex items-end gap-2">
-        <div>
-          <label className="block text-sm">Alumno</label>
-          <select value={studentId ?? ''} onChange={e => setStudentId(Number(e.target.value) || null)} className="p-2 border rounded">
-            <option value="">Seleccionar</option>
-            {students.map(s => (
-              <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm">Monto (ARS)</label>
-          <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" className="p-2 border rounded" />
-        </div>
-        <div>
-          <Button type="submit" variant="default">Registrar pago</Button>
-        </div>
-      </form>
+      <Card>
+        <form onSubmit={handleCreate} className="mt-0 flex items-end gap-4">
+          <div>
+            <label className="block text-sm">Alumno</label>
+            <select value={studentId ?? ''} onChange={e => setStudentId(Number(e.target.value) || null)} className="p-2 border rounded">
+              <option value="">Seleccionar</option>
+              {students.map(s => (
+                <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm">Monto (ARS)</label>
+            <Input value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+          </div>
+          <div>
+            <Button type="submit" variant="default">Registrar pago</Button>
+          </div>
+        </form>
+      </Card>
 
-      <div className="mt-6">
+      <Card>
         <h4 className="text-lg font-medium">Últimos pagos</h4>
         <ul className="mt-2 space-y-2">
           {payments.map(p => (
@@ -62,7 +66,7 @@ export default function Pagos() {
             </li>
           ))}
         </ul>
-      </div>
+      </Card>
     </div>
   )
 }
