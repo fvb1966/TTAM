@@ -1,1 +1,39 @@
+(The file `e:\IA\APPs\Tenis_de_Mesa_APP\README` exists, but contains only whitespace)
+TTAM - Table Tennis Academy Manager
+
+Proyecto TTAM — aplicación de escritorio para la gestión de academias y torneos de tenis de mesa.
+
+Estructura inicial y scripts:
+
+- `npm run dev` — arrancar dev server (Vite)
+- `npm run build` — build frontend
+- `npm start` — ejecutar electron
+- `npm run electron:dev` — desarrollo con electron + vite
+
+Principios: offline-first, SQLite + Prisma, Electron + React
+
+## Administración — crear administrador (seed)
+
+Si necesitas crear el usuario administrador inicial para la aplicación (autenticación single-admin), hay un script de seed disponible.
+
+- Ejecutar (requiere que la base de datos exista y las migraciones estén aplicadas):
+
+```bash
+# con npm (permite pasar usuario y contraseña):
+npm run seed:admin -- <usuario> <contraseña>
+
+# o directamente con node:
+node scripts/seed-admin.js <usuario> <contraseña>
+```
+
+- Precondiciones:
+	- Instalar dependencias: `npm install`
+	- Aplicar migraciones de Prisma: `npm run prisma:migrate` (esto crea `data/ttam.db` si no existe)
+
+- Política recomendada de contraseñas:
+	- Mínimo 8 caracteres.
+	- Mezcla de letras mayúsculas/minúsculas, números y símbolos cuando sea posible.
+	- Evitar contraseñas triviales ("admin", "12345678").
+
+Nota de seguridad: el script guarda el hash de la contraseña con `argon2`. Para entornos de producción, considera medidas adicionales (no exponer el archivo de base de datos, cifrado de disco, copias de seguridad seguras, y cambios periódicos de contraseña).
 
