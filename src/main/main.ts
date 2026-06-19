@@ -55,6 +55,23 @@ app.whenReady().then(() => {
     return importRegistrations(prisma, tournamentId, rows)
   })
 
+  // Registrations: list/create/delete for manual management
+  ipcMain.handle('db:getRegistrations', async (_event, tournamentId?: number) => {
+    if (typeof tournamentId === 'number') {
+      return prisma.registration.findMany({ where: { tournamentId }, include: { student: true }, orderBy: { createdAt: 'desc' } })
+    }
+    return prisma.registration.findMany({ include: { student: true, tournament: true }, orderBy: { createdAt: 'desc' } })
+  })
+
+  ipcMain.handle('db:createRegistration', async (_event, payload) => {
+    const { tournamentId, studentId } = payload || {}
+    return prisma.registration.create({ data: { tournamentId, studentId } })
+  })
+
+  ipcMain.handle('db:deleteRegistration', async (_event, id) => {
+    return prisma.registration.delete({ where: { id } })
+  })
+
   // Locale handlers to sync i18n between renderer and main
   ipcMain.handle('app:setLocale', async (_event, locale: string) => {
     try {

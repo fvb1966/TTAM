@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('ttam', {
     getTournaments: () => ipcRenderer.invoke('db:getTournaments'),
     createTournament: (payload: unknown) => ipcRenderer.invoke('db:createTournament', payload as Record<string, unknown>),
     importRegistrations: (payload: unknown) => ipcRenderer.invoke('db:importRegistrations', payload as Record<string, unknown>),
+    // Registrations (manual)
+    getRegistrations: (tournamentId?: number) => ipcRenderer.invoke('db:getRegistrations', tournamentId),
+    createRegistration: (payload: unknown) => ipcRenderer.invoke('db:createRegistration', payload as Record<string, unknown>),
+    deleteRegistration: (id: number) => ipcRenderer.invoke('db:deleteRegistration', id),
   },
   backup: {
     create: () => ipcRenderer.invoke('backup:create'),

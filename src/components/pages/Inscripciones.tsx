@@ -10,6 +10,9 @@ type ImportIssue = { field?: string; fieldLabel?: string; message: string; code?
 type ImportError = { index: number; row?: CsvRow; issues: ImportIssue[] }
 type ImportResult = { imported: number; details?: Array<{ studentId: number; registrationId: number }>; errors?: ImportError[] }
 
+type Student = { id: number; firstName: string; lastName?: string; email?: string; phone?: string }
+type Registration = { id: number; student?: Student; createdAt?: string }
+
 export default function Inscripciones() {
   const { t } = useTranslation()
   const [tournaments, setTournaments] = useState<Tournament[]>([])
@@ -21,10 +24,32 @@ export default function Inscripciones() {
   const [errors, setErrors] = useState<ImportError[]>([])
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [students, setStudents] = useState<Student[]>([])
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null)
+  const [registrations, setRegistrations] = useState<Registration[]>([])
+
+  const [newFirstName, setNewFirstName] = useState('')
+  const [newLastName, setNewLastName] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [newPhone, setNewPhone] = useState('')
 
   const loadTournaments = async () => {
     const list = await window.ttam.db.getTournaments()
     setTournaments(list as Tournament[])
+  }
+
+  const loadStudents = async () => {
+    const list = await window.ttam.db.getStudents()
+    setStudents(list as Student[])
+  }
+
+  const loadRegistrations = async (tid: number | null) => {
+    if (!tid) {
+      setRegistrations([])
+      return
+    }
+    const list = (await window.ttam.db.getRegistrations(tid)) as Registration[]
+    setRegistrations(list || [])
   }
 
   useEffect(() => {
@@ -32,9 +57,14 @@ export default function Inscripciones() {
     ;(async () => {
       if (!mounted) return
       await loadTournaments()
+      await loadStudents()
     })()
     return () => { mounted = false }
   }, [])
+
+  useEffect(() => {
+    void loadRegistrations(tournamentId)
+  }, [tournamentId])
 
   const handleFile = (file: File | null) => {
     if (!file) return
@@ -74,12 +104,60 @@ export default function Inscripciones() {
       setImportResult(result)
       setErrors(result.errors || [])
       alert(t('inscriptions.importedCount', { count: result.imported }))
+      await loadRegistrations(tournamentId)
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
       alert(t('inscriptions.importError'))
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleManualRegister = async () => {
+    if (!tournamentId || !selectedStudentId) return alert('Seleccione torneo y alumno')
+    try {
+      await window.ttam.db.createRegistration({ tournamentId, studentId: selectedStudentId })
+      await loadRegistrations(tournamentId)
+      alert('Registro creado')
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+      alert('Error al crear registro')
+    }
+  }
+
+  const handleCreateStudentAndRegister = async () => {
+    if (!tournamentId) return alert('Seleccione un torneo')
+    if (!newFirstName) return alert('Ingrese nombre')
+    try {
+      const student = (await window.ttam.db.createStudent({ firstName: newFirstName, lastName: newLastName, email: newEmail, phone: newPhone })) as Student
+      if (student && student.id) {
+        await window.ttam.db.createRegistration({ tournamentId, studentId: student.id })
+        setNewFirstName('')
+        setNewLastName('')
+        setNewEmail('')
+        setNewPhone('')
+        await loadStudents()
+        await loadRegistrations(tournamentId)
+        alert('Alumno creado y registrado')
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+      alert('Error al crear alumno')
+    }
+  }
+
+  const handleDeleteRegistration = async (id: number) => {
+    if (!confirm('¿Borrar inscripción?')) return
+    try {
+      await window.ttam.db.deleteRegistration(id)
+      await loadRegistrations(tournamentId)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+      alert('Error al borrar inscripción')
     }
   }
 
@@ -104,6 +182,51 @@ export default function Inscripciones() {
 
           <div>
             <Button onClick={handleImport} disabled={loading || !tournamentId || !csvData.length}>{loading ? t('inscriptions.importing') : t('inscriptions.import')}</Button>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <h4 className="text-sm font-medium">Registro manual</h4>
+        <div className="mt-2 flex gap-4 items-end">
+          <div>
+            <label className="block text-sm">Alumno</label>
+            <select value={selectedStudentId ?? ''} onChange={e => setSelectedStudentId(Number(e.target.value) || null)} className="p-2 border rounded">
+              <option value="">-- Seleccionar alumno --</option>
+              {students.map(s => <option key={s.id} value={s.id}>{s.firstName} {s.lastName || ''}</option>)}
+            </select>
+          </div>
+          <div>
+            <Button onClick={handleManualRegister} disabled={!tournamentId || !selectedStudentId}>Registrar</Button>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <h5 className="font-medium">Crear alumno y registrar</h5>
+          <div className="mt-2 grid grid-cols-2 gap-2 max-w-md">
+            <input className="p-2 border rounded" placeholder="Nombre" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} />
+            <input className="p-2 border rounded" placeholder="Apellido" value={newLastName} onChange={e => setNewLastName(e.target.value)} />
+            <input className="p-2 border rounded" placeholder="Email" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
+            <input className="p-2 border rounded" placeholder="Teléfono" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+            <div />
+            <div>
+              <Button onClick={handleCreateStudentAndRegister} disabled={!tournamentId || !newFirstName}>Crear y registrar</Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <h5 className="font-medium">Inscripciones</h5>
+          <div className="mt-2 space-y-2">
+            {registrations.length === 0 && <div className="text-sm text-slate-500">No hay inscripciones para este torneo.</div>}
+            {registrations.map(r => (
+              <div key={r.id} className="p-2 border rounded flex justify-between items-center">
+                <div>{r.student ? `${r.student.firstName} ${r.student.lastName || ''}` : `ID ${r.id}`}</div>
+                <div>
+                  <Button variant="ghost" onClick={() => handleDeleteRegistration(r.id)}>Borrar</Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </Card>
