@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('ttam', {
     deleteStudent: (id: number) => ipcRenderer.invoke('db:deleteStudent', id),
     getPayments: () => ipcRenderer.invoke('db:getPayments'),
     createPayment: (payload: unknown) => ipcRenderer.invoke('db:createPayment', payload as Record<string, unknown>),
+    updatePayment: (payload: unknown) => ipcRenderer.invoke('db:updatePayment', payload as Record<string, unknown>),
+    deletePayment: (id: number) => ipcRenderer.invoke('db:deletePayment', id),
     getTournaments: () => ipcRenderer.invoke('db:getTournaments'),
     createTournament: (payload: unknown) => ipcRenderer.invoke('db:createTournament', payload as Record<string, unknown>),
     importRegistrations: (payload: unknown) => ipcRenderer.invoke('db:importRegistrations', payload as Record<string, unknown>),

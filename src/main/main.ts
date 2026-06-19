@@ -47,6 +47,21 @@ app.whenReady().then(() => {
     return prisma.payment.create({ data: { studentId, amountCents, currency: currency ?? 'ARS', description, method } })
   })
 
+  ipcMain.handle('db:updatePayment', async (_event, payload) => {
+    const { id, amountCents, currency, description, method, paidAt } = payload || {}
+    const data: Record<string, unknown> = {}
+    if (amountCents !== undefined) data.amountCents = amountCents
+    if (currency !== undefined) data.currency = currency
+    if (description !== undefined) data.description = description
+    if (method !== undefined) data.method = method
+    if (paidAt !== undefined) data.paidAt = new Date(paidAt)
+    return prisma.payment.update({ where: { id }, data })
+  })
+
+  ipcMain.handle('db:deletePayment', async (_event, id) => {
+    return prisma.payment.delete({ where: { id } })
+  })
+
   // Tournaments
   ipcMain.handle('db:getTournaments', async () => {
     return prisma.tournament.findMany({ orderBy: { createdAt: 'desc' } })
