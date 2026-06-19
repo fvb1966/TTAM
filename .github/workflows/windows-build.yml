@@ -24,13 +24,20 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
       - name: Generate icons (ImageMagick)
+        shell: pwsh
         run: |
-          mkdir build\icons || exit 0
-          magick -size 256x256 xc:'#1F2937' -gravity center -pointsize 160 -fill white -annotate 0 "TT" build\icons\icon-256.png
-          magick build\icons\icon-256.png -resize 48x48 build\icons\icon-48.png
-          magick build\icons\icon-256.png -resize 32x32 build\icons\icon-32.png
-          magick build\icons\icon-256.png -resize 16x16 build\icons\icon-16.png
-          magick build\icons\icon-256.png build\icons\icon-48.png build\icons\icon-32.png build\icons\icon-16.png build\icons\icon.ico
+          if (-not (Test-Path -Path 'build\\icons')) {
+            New-Item -ItemType Directory -Path 'build\\icons' | Out-Null
+          }
+          magick -size 256x256 xc:'#1F2937' -gravity center -pointsize 160 -fill white -annotate 0 "TT" 'build\\icons\\icon-256.png'
+          magick 'build\\icons\\icon-256.png' -resize 48x48 'build\\icons\\icon-48.png'
+          magick 'build\\icons\\icon-256.png' -resize 32x32 'build\\icons\\icon-32.png'
+          magick 'build\\icons\\icon-256.png' -resize 16x16 'build\\icons\\icon-16.png'
+          try {
+            magick 'build\\icons\\icon-256.png' 'build\\icons\\icon-48.png' 'build\\icons\\icon-32.png' 'build\\icons\\icon-16.png' 'build\\icons\\icon.ico'
+          } catch {
+            Write-Warning "magick ICO creation failed: $_"
+          }
       - name: Build renderer
         run: npm run build
       - name: Build main & preload
