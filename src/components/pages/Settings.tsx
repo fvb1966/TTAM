@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useToast } from '@/components/ui/Toast'
 
 export default function Settings() {
   const { t, i18n } = useTranslation()
@@ -13,6 +14,7 @@ export default function Settings() {
   const [backups, setBackups] = useState<Array<{ name: string; path: string; mtime: number }>>([])
   const [selectedBackup, setSelectedBackup] = useState('')
   const [loading, setLoading] = useState(false)
+  const { showToast } = useToast()
 
   useEffect(() => {
     let mounted = true
@@ -43,25 +45,25 @@ export default function Settings() {
 
   const handleSave = async () => {
     setLoading(true)
-    try {
-      await (window as any).ttam.settings.set({ locale, currency, backupDir })
-      // change renderer language (this also persists via i18n listener)
-      await i18n.changeLanguage(locale)
-      alert('Ajustes guardados')
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err)
-      alert('Error al guardar ajustes')
-    } finally {
-      setLoading(false)
-    }
+      try {
+        await (window as any).ttam.settings.set({ locale, currency, backupDir, authRemember: remember })
+        // change renderer language (this also persists via i18n listener)
+        await i18n.changeLanguage(locale)
+        showToast('success', 'Ajustes guardados')
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        showToast('error', 'Error al guardar ajustes')
+      } finally {
+        setLoading(false)
+      }
   }
 
   const handleBackupNow = async () => {
     setLoading(true)
-    try {
+      try {
       const p = await (window as any).ttam.backup.create()
-      alert(`Backup creado: ${p}`)
+      showToast('success', `Backup creado: ${p}`)
       try {
         const list = await (window as any).ttam.backup.list()
         setBackups(list || [])
@@ -69,7 +71,7 @@ export default function Settings() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al crear backup')
+      showToast('error', 'Error al crear backup')
     } finally {
       setLoading(false)
     }
@@ -89,21 +91,21 @@ export default function Settings() {
   }
 
   const handleRestore = async () => {
-    if (!selectedBackup) return alert('Seleccione un backup para restaurar')
+    if (!selectedBackup) return showToast('info', 'Seleccione un backup para restaurar')
     const ok = confirm('Se hará una copia de seguridad del estado actual antes de restaurar. ¿Continuar?')
     if (!ok) return
     setLoading(true)
     try {
       const res = await (window as any).ttam.backup.restore(selectedBackup)
       if (res && res.restored) {
-        alert('Restauración completada. Se creó copia previa: ' + (res.preRestoreBackup || ''))
+        showToast('success', 'Restauración completada')
       } else {
-        alert('Error al restaurar backup: ' + (res && res.error ? res.error : 'desconocido'))
+        showToast('error', 'Error al restaurar backup: ' + (res && res.error ? res.error : 'desconocido'))
       }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al restaurar backup')
+      showToast('error', 'Error al restaurar backup')
     } finally {
       setLoading(false)
     }

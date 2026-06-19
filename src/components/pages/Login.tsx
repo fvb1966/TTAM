@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useToast } from '@/components/ui/Toast'
 
 export default function Login({ onAuth }: { onAuth?: (user: any) => void }) {
   const [hasAdmin, setHasAdmin] = useState<boolean | null>(null)
@@ -8,6 +9,7 @@ export default function Login({ onAuth }: { onAuth?: (user: any) => void }) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const { showToast } = useToast()
 
   useEffect(() => {
     let mounted = true
@@ -24,24 +26,24 @@ export default function Login({ onAuth }: { onAuth?: (user: any) => void }) {
   }, [])
 
   const handleCreate = async () => {
-    if (!username || !password) return alert('Ingrese usuario y contraseña')
-    if (password !== confirmPassword) return alert('Las contraseñas no coinciden')
+    if (!username || !password) return showToast('info', 'Ingrese usuario y contraseña')
+    if (password !== confirmPassword) return showToast('info', 'Las contraseñas no coinciden')
     setLoading(true)
     try {
       const user = await (window as any).ttam.auth.createAdmin({ username, password })
-      alert('Administrador creado')
+      showToast('success', 'Administrador creado')
       if (onAuth) onAuth(user)
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error creando administrador: ' + (err && err.message ? err.message : ''))
+      showToast('error', 'Error creando administrador: ' + (err && err.message ? err.message : ''))
     } finally {
       setLoading(false)
     }
   }
 
   const handleLogin = async () => {
-    if (!username || !password) return alert('Ingrese usuario y contraseña')
+    if (!username || !password) return showToast('info', 'Ingrese usuario y contraseña')
     setLoading(true)
     try {
       const user = await (window as any).ttam.auth.login({ username, password })
@@ -49,7 +51,7 @@ export default function Login({ onAuth }: { onAuth?: (user: any) => void }) {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Credenciales inválidas')
+      showToast('error', 'Credenciales inválidas')
     } finally {
       setLoading(false)
     }
