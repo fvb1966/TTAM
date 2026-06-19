@@ -172,6 +172,14 @@ app.whenReady().then(() => {
     try {
       const current = await readConfig()
       const next = { ...(current || {}), ...(payload || {}) }
+      // If the user explicitly disables persistent auth, remove stored session
+      try {
+        if (payload && Object.prototype.hasOwnProperty.call(payload, 'authRemember') && payload.authRemember === false) {
+          delete (next as any).session
+        }
+      } catch {
+        // ignore
+      }
       await writeConfig(next)
       return next
     } catch (err) {

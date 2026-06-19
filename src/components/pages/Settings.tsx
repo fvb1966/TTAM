@@ -9,6 +9,7 @@ export default function Settings() {
   const [currency, setCurrency] = useState('ARS')
   const [dbPath, setDbPath] = useState('')
   const [backupDir, setBackupDir] = useState('')
+  const [remember, setRemember] = useState(false)
   const [backups, setBackups] = useState<Array<{ name: string; path: string; mtime: number }>>([])
   const [selectedBackup, setSelectedBackup] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,6 +24,7 @@ export default function Settings() {
         setLocale(cfg.locale || (await (window as any).ttam.getLocale()) || i18n.language || 'es')
         setCurrency(cfg.currency || 'ARS')
         setBackupDir(cfg.backupDir || (paths.backupDir || ''))
+        setRemember(Boolean(cfg.authRemember))
         setDbPath(paths.dbPath || '')
         // fetch available backups
         try {
@@ -135,11 +137,20 @@ export default function Settings() {
             <label className="block text-sm">Directorio de backups</label>
             <input className="p-2 border rounded w-full" value={backupDir} onChange={e => setBackupDir(e.target.value)} />
           </div>
+
+          <div>
+            <label className="block text-sm">Recordarme</label>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />
+              <span className="text-sm text-slate-600">Mantener sesión iniciada entre reinicios</span>
+            </div>
+          </div>
         </div>
 
         <div className="mt-4 flex gap-2">
           <Button onClick={handleSave} disabled={loading}>Guardar ajustes</Button>
           <Button onClick={handleBackupNow} variant="ghost" disabled={loading}>Crear backup ahora</Button>
+          <Button onClick={async () => { await (window as any).ttam.auth.logout(); window.location.reload() }} variant="destructive">Cerrar sesión</Button>
         </div>
 
         <div className="mt-6">
