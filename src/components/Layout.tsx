@@ -5,6 +5,7 @@ import Alumnos from './pages/Alumnos'
 import Pagos from './pages/Pagos'
 import Torneos from './pages/Torneos'
 import Inscripciones from './pages/Inscripciones'
+import Reportes from './pages/Reportes'
 
 export default function Layout() {
   const [page, setPage] = useState('dashboard')
@@ -19,6 +20,8 @@ export default function Layout() {
         return <Torneos />
       case 'inscripciones':
         return <Inscripciones />
+        case 'reportes':
+          return <Reportes />
       default:
         return (
           <div>
