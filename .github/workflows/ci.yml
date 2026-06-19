@@ -71,6 +71,25 @@ jobs:
       - name: Build main
         run: npm run build:main --if-present
 
+      - name: Create distribution zip
+        run: |
+          echo "Creating dist archive"
+          files=""
+          if [ -d dist ]; then files="$files dist"; fi
+          if [ -d renderer/dist ]; then files="$files renderer/dist"; fi
+          if [ -d build/renderer ]; then files="$files build/renderer"; fi
+          if [ -d dist/main ]; then files="$files dist/main"; fi
+          if [ -z "$files" ]; then echo "No build outputs found"; else zip -r "dist-${{ matrix.node-version }}-${{ github.run_id }}.zip" $files; fi
+        shell: bash
+
+      - name: Upload distribution zip
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-zip-${{ matrix.node-version }}-${{ github.run_id }}
+          path: dist-${{ matrix.node-version }}-${{ github.run_id }}.zip
+          if-no-files-found: warn
+
       - name: Upload renderer artifact
         if: always()
         uses: actions/upload-artifact@v4
