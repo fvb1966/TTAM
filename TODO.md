@@ -20,6 +20,8 @@ Resumen rápido:
 - Vitest: tests unitarios presentes y ejecutados (importer tests pasan) — OK.
 - i18n: preferencia de idioma persistida en `localStorage` y sincronizada con `app.getPath('userData')/config.json` — IMPLEMENTADO.
 
+- Preparar `electron-builder`: `dist` script añadido a `package.json`; documentación `Docs/BUILD.md` creada. La carpeta `build/` está en `.gitignore` y debe contener los iconos locales antes de empaquetar.
+
 
 Acciones iniciales (alto nivel):
 1. Fase 0 — Foundation
