@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
+import { useToast } from '@/components/ui/Toast'
 
 type Student = { id: number; firstName: string; lastName?: string }
 type Payment = { id: number; amountCents: number; currency: string; student?: Student; paidAt: string }
@@ -11,6 +12,7 @@ type EditPayment = { id: number; studentId?: number | null; amount?: string }
 
 export default function Pagos() {
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const [students, setStudents] = useState<Student[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
   const [studentId, setStudentId] = useState<number | null>(null)
@@ -77,7 +79,7 @@ export default function Pagos() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al borrar pago')
+      showToast('error', 'Error al borrar pago')
     }
   }
 

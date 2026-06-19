@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Papa from 'papaparse'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useToast } from '@/components/ui/Toast'
 
 type Tournament = { id: number; name: string }
 type CsvRow = Record<string, string>
@@ -24,6 +25,7 @@ export default function Inscripciones() {
   const [errors, setErrors] = useState<ImportError[]>([])
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const { showToast } = useToast()
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null)
   const [registrations, setRegistrations] = useState<Registration[]>([])
@@ -90,8 +92,8 @@ export default function Inscripciones() {
   }
 
   const handleImport = async () => {
-    if (!tournamentId) return alert(t('inscriptions.selectTournamentAlert'))
-    if (!csvData.length) return alert(t('inscriptions.uploadCsvAlert'))
+    if (!tournamentId) { showToast('info', t('inscriptions.selectTournamentAlert')); return }
+    if (!csvData.length) { showToast('info', t('inscriptions.uploadCsvAlert')); return }
     const rows = csvData.map(r => ({
       firstName: mapping.firstName ? r[mapping.firstName] : undefined,
       lastName: mapping.lastName ? r[mapping.lastName] : undefined,
@@ -103,33 +105,33 @@ export default function Inscripciones() {
       const result = (await window.ttam.db.importRegistrations({ tournamentId, rows })) as ImportResult
       setImportResult(result)
       setErrors(result.errors || [])
-      alert(t('inscriptions.importedCount', { count: result.imported }))
+      showToast('success', t('inscriptions.importedCount', { count: result.imported }))
       await loadRegistrations(tournamentId)
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert(t('inscriptions.importError'))
+      showToast('error', t('inscriptions.importError'))
     } finally {
       setLoading(false)
     }
   }
 
   const handleManualRegister = async () => {
-    if (!tournamentId || !selectedStudentId) return alert('Seleccione torneo y alumno')
+    if (!tournamentId || !selectedStudentId) return showToast('info', 'Seleccione torneo y alumno')
     try {
       await window.ttam.db.createRegistration({ tournamentId, studentId: selectedStudentId })
       await loadRegistrations(tournamentId)
-      alert('Registro creado')
+      showToast('success', 'Registro creado')
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al crear registro')
+      showToast('error', 'Error al crear registro')
     }
   }
 
   const handleCreateStudentAndRegister = async () => {
-    if (!tournamentId) return alert('Seleccione un torneo')
-    if (!newFirstName) return alert('Ingrese nombre')
+    if (!tournamentId) return showToast('info', 'Seleccione un torneo')
+    if (!newFirstName) return showToast('info', 'Ingrese nombre')
     try {
       const student = (await window.ttam.db.createStudent({ firstName: newFirstName, lastName: newLastName, email: newEmail, phone: newPhone })) as Student
       if (student && student.id) {
@@ -140,12 +142,12 @@ export default function Inscripciones() {
         setNewPhone('')
         await loadStudents()
         await loadRegistrations(tournamentId)
-        alert('Alumno creado y registrado')
+        showToast('success', 'Alumno creado y registrado')
       }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al crear alumno')
+      showToast('error', 'Error al crear alumno')
     }
   }
 
@@ -157,7 +159,7 @@ export default function Inscripciones() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al borrar inscripción')
+      showToast('error', 'Error al borrar inscripción')
     }
   }
 

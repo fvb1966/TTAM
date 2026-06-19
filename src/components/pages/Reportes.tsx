@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useToast } from '@/components/ui/Toast'
 import { jsPDF } from 'jspdf'
 import * as XLSX from 'xlsx'
 
@@ -11,6 +12,7 @@ type Payment = { id: number; amountCents: number; currency: string; student?: St
 export default function Reportes() {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
+  const { showToast } = useToast()
 
   const fetchStudents = async (): Promise<Student[]> => {
     const s = await window.ttam.db.getStudents()
@@ -38,7 +40,7 @@ export default function Reportes() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al exportar PDF')
+      showToast('error', 'Error al exportar PDF')
     } finally {
       setLoading(false)
     }
@@ -55,7 +57,7 @@ export default function Reportes() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al exportar XLSX')
+      showToast('error', 'Error al exportar XLSX')
     } finally {
       setLoading(false)
     }
@@ -78,7 +80,7 @@ export default function Reportes() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al exportar PDF')
+      showToast('error', 'Error al exportar PDF')
     } finally {
       setLoading(false)
     }
@@ -102,7 +104,7 @@ export default function Reportes() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al exportar XLSX')
+      showToast('error', 'Error al exportar XLSX')
     } finally {
       setLoading(false)
     }
@@ -129,7 +131,7 @@ export default function Reportes() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al exportar XLSX')
+      showToast('error', 'Error al exportar XLSX')
     } finally {
       setLoading(false)
     }

@@ -4,6 +4,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import Table from '@/components/ui/Table'
+import { useToast } from '@/components/ui/Toast'
 
 type Student = {
   id: number
@@ -15,6 +16,7 @@ type Student = {
 
 export default function Alumnos() {
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const [students, setStudents] = useState<Student[]>([])
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -83,7 +85,7 @@ export default function Alumnos() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
-      alert('Error al borrar alumno')
+      showToast('error', 'Error al borrar alumno')
     }
   }
 
