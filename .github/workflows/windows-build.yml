@@ -1,0 +1,46 @@
+name: Windows Build Installer
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows-installer:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    env:
+      CI: true
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci || npm install
+      - name: Generate icons (ImageMagick)
+        run: |
+          mkdir build\icons || exit 0
+          magick -size 256x256 xc:'#1F2937' -gravity center -pointsize 160 -fill white -annotate 0 "TT" build\icons\icon-256.png
+          magick build\icons\icon-256.png -resize 48x48 build\icons\icon-48.png
+          magick build\icons\icon-256.png -resize 32x32 build\icons\icon-32.png
+          magick build\icons\icon-256.png -resize 16x16 build\icons\icon-16.png
+          magick build\icons\icon-256.png build\icons\icon-48.png build\icons\icon-32.png build\icons\icon-16.png build\icons\icon.ico
+      - name: Build renderer
+        run: npm run build
+      - name: Build main & preload
+        run: npm run build:main
+      - name: Create installer (electron-builder)
+        run: npm run dist
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/win-unpacked/**
