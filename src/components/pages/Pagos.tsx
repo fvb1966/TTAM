@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import Button from '@/components/ui/Button'
 
 type Student = { id: number; firstName: string; lastName?: string }
 type Payment = { id: number; amountCents: number; currency: string; student?: Student; paidAt: string }
@@ -48,7 +49,7 @@ export default function Pagos() {
           <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" className="p-2 border rounded" />
         </div>
         <div>
-          <button className="px-4 py-2 bg-green-600 text-white rounded">Registrar pago</button>
+          <Button type="submit" variant="default">Registrar pago</Button>
         </div>
       </form>
 

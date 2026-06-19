@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import Button from '@/components/ui/Button'
 
 type Student = {
   id: number
@@ -47,7 +48,7 @@ export default function Alumnos() {
           <input placeholder="Teléfono" value={phone} onChange={e => setPhone(e.target.value)} className="flex-1 p-2 border rounded" />
         </div>
         <div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded">Crear alumno</button>
+          <Button type="submit">Crear alumno</Button>
         </div>
       </form>
 
