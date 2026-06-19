@@ -10,7 +10,7 @@
     "start": "electron .",
     "build:main": "esbuild src/main/main.ts --bundle --platform=node --outfile=dist/main.js --external:electron --sourcemap && esbuild src/main/preload.ts --bundle --platform=node --outfile=dist/preload.js --sourcemap",
     "build:main:watch": "concurrently \"esbuild src/main/main.ts --bundle --platform=node --outfile=dist/main.js --external:electron --sourcemap --watch\" \"esbuild src/main/preload.ts --bundle --platform=node --outfile=dist/preload.js --sourcemap --watch\"",
-    "electron:dev": "concurrently \"npm:dev\" \"npm:build:main:watch\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:dev": "concurrently \"npm:dev\" \"npm:build:main:watch\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest"
