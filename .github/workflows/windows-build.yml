@@ -43,7 +43,7 @@ jobs:
       - name: Build main & preload
         run: npm run build:main
       - name: Create installer (electron-builder)
-        run: npm run dist
+        run: npm run dist -- --publish never
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
