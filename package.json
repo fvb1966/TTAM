@@ -18,7 +18,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest",
-    "seed:admin": "node scripts/seed-admin.js"
+    "seed:admin": "node scripts/seed-admin.js",
+    "smoke": "bash scripts/docker-smoke.sh"
   },
   "build": {
     "appId": "com.ttam.app",

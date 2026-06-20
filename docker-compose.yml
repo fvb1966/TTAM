@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  smoke:
+    build: .
+    volumes:
+      - ./artifacts:/artifacts
+    command: ["bash", "scripts/docker-smoke.sh"]
+    tty: true
