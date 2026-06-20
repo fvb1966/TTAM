@@ -23,10 +23,11 @@
   "build": {
     "appId": "com.ttam.app",
     "productName": "TTAM",
-    "npmRebuild": false,
+    "npmRebuild": true,
     "files": [
       "dist/**",
-      "package.json"
+      "package.json",
+      "node_modules/**"
     ],
     "directories": {
       "buildResources": "build"
