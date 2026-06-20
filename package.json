@@ -29,6 +29,9 @@
       "package.json",
       "node_modules/**"
     ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
     "directories": {
       "buildResources": "build"
     },
