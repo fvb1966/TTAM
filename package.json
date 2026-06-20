@@ -24,6 +24,7 @@
     "appId": "com.ttam.app",
     "productName": "TTAM",
     "npmRebuild": true,
+    "publish": "never",
     "files": [
       "dist/**",
       "package.json",
