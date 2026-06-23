@@ -19,7 +19,8 @@
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest",
     "seed:admin": "node scripts/seed-admin.js",
-    "smoke": "bash scripts/docker-smoke.sh"
+    "smoke": "bash scripts/docker-smoke.sh",
+    "smoke:local": "node scripts/smoke-local.js"
   },
   "build": {
     "appId": "com.ttam.app",
