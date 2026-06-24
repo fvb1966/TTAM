@@ -6,14 +6,26 @@ import { readConfig, writeConfig } from './config'
 // native binary), fall back to a PBKDF2-based JS implementation so the app
 // doesn't crash. Note: PBKDF2 hashes are not compatible with Argon2 hashes —
 // existing Argon2 password hashes will not verify unless `argon2` is available.
-let argon2: any = null
-try {
-  // use require to avoid module load-time crashes when native bindings are missing
-  // vitest/vi.mock should still be able to mock this in tests
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  argon2 = require('argon2')
-} catch (e) {
-  argon2 = null
+type Argon2Module = {
+  default?: { hash?: (p: string) => Promise<string>; verify?: (h: string, p: string) => Promise<boolean> }
+  hash?: (p: string) => Promise<string>
+  verify?: (h: string, p: string) => Promise<boolean>
+}
+
+let argon2: Argon2Module | null = null
+
+async function ensureArgon2() {
+  if (argon2) return argon2
+  try {
+    // Use dynamic import so test runner (vitest) can mock it reliably.
+    const mod = (await import('argon2')) as unknown as Argon2Module
+    const impl = mod.default && typeof mod.default === 'object' ? mod.default : mod
+    argon2 = impl
+    return argon2
+  } catch {
+    argon2 = null
+    return null
+  }
 }
 
 const pbkdf2Hash = async (password: string) => {
@@ -46,15 +58,17 @@ const pbkdf2Verify = async (stored: string, password: string) => {
 }
 
 const hashPassword = async (password: string) => {
-  if (argon2) return await argon2.hash(password)
+  const impl = await ensureArgon2()
+  if (impl && typeof impl.hash === 'function') return await impl.hash(password)
   return await pbkdf2Hash(password)
 }
 
 const verifyPassword = async (storedHash: string, password: string) => {
-  if (argon2) {
+  const impl = await ensureArgon2()
+  if (impl && typeof impl.verify === 'function') {
     try {
-      return await argon2.verify(storedHash, password)
-    } catch (e) {
+      return await impl.verify(storedHash, password)
+    } catch {
       // fall through to other checks
     }
   }
@@ -70,16 +84,18 @@ type Session = { userId: number; username: string } | null
 
 let currentSession: Session = null
 
+type ConfigWithSession = Record<string, unknown> & { session?: { userId: number; username: string; createdAt: number } }
+
 async function persistSession(session: Session) {
   try {
-    const cfg = await readConfig()
-    const next = { ...(cfg || {}) }
+    const cfg = (await readConfig()) as unknown as ConfigWithSession | undefined
+    const next: ConfigWithSession = { ...(cfg || {}) }
     if (session) {
-      ;(next as any).session = { userId: session.userId, username: session.username, createdAt: Date.now() }
+      next.session = { userId: session.userId, username: session.username, createdAt: Date.now() }
     } else {
-      delete (next as any).session
+      delete next.session
     }
-    await writeConfig(next)
+    await writeConfig(next as unknown as Record<string, unknown>)
   } catch {
     // ignore persistence errors
   }
@@ -107,7 +123,7 @@ export async function login(username: string, password: string) {
   let ok = false
   try {
     ok = await verifyPassword(user.passwordHash, password)
-  } catch (e) {
+  } catch {
     ok = false
   }
   if (!ok) throw new Error('Invalid credentials')
@@ -119,10 +135,10 @@ export async function login(username: string, password: string) {
 export async function me() {
   if (currentSession) return currentSession
   try {
-    const cfg = await readConfig()
-    const s = (cfg || ({} as any)).session
-    if (s && typeof s === 'object' && (s as any).userId) {
-      currentSession = { userId: Number((s as any).userId), username: String((s as any).username) }
+    const cfg = (await readConfig()) as unknown as ConfigWithSession | undefined
+    const s = (cfg || {}).session
+    if (s && typeof s === 'object' && 'userId' in s) {
+      currentSession = { userId: Number(s.userId), username: String(s.username) }
       return currentSession
     }
   } catch {

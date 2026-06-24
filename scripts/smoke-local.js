@@ -3,7 +3,6 @@ const { execSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
-const archiver = require('archiver')
 
 const ROOT = process.cwd()
 const OUT_DIR = path.join(ROOT, 'artifacts', 'ttam_local_smoke')
@@ -70,6 +69,8 @@ async function main() {
 
   // Prisma generate
   run('npx prisma generate')
+  // Ensure the SQLite database and schema exist for a clean smoke
+  run('npx prisma db push --accept-data-loss')
 
   // Build main and renderer (best-effort)
   run('npm run build:main --if-present')
@@ -118,11 +119,15 @@ async function main() {
   // Try running dist/main.js if exists
   const mainPath = path.join(ROOT, 'dist', 'main.js')
   if (fs.existsSync(mainPath)) {
-    log('Running dist/main.js for a short smoke (10s timeout)')
-    try {
-      run(`node "${mainPath}"`)
-    } catch (e) {
-      log('Error running dist/main.js: ' + String(e))
+    if (process.env.GITHUB_ACTIONS || process.env.CI) {
+      log('Skipping running dist/main.js in CI (electron unavailable)')
+    } else {
+      log('Running dist/main.js for a short smoke (10s timeout)')
+      try {
+        run(`node "${mainPath}"`)
+      } catch (e) {
+        log('Error running dist/main.js: ' + String(e))
+      }
     }
   }
 
@@ -136,16 +141,63 @@ async function main() {
     }
   }
 
-  // Package results into zip
+  // Package results into zip (try archiver, fallback to PowerShell Compress-Archive)
   const zipPath = path.join(OUT_DIR, 'ttam_test_results_local.zip')
   try {
-    const output = fs.createWriteStream(zipPath)
-    const archive = archiver('zip', { zlib: { level: 9 } })
-    output.on('close', function () { log('Created results zip: ' + zipPath + ' (' + archive.pointer() + ' bytes)') })
-    archive.on('error', function (err) { throw err })
-    archive.pipe(output)
-    archive.directory(LOG_DIR, false)
-    await archive.finalize()
+    // Prefer archiver; if it's an ESM-only module use dynamic import
+    let archiverModule = null
+    try {
+      archiverModule = require('archiver')
+    } catch (err) {
+      log('`archiver` require() failed; attempting dynamic import')
+      try {
+        const mod = await import('archiver')
+        archiverModule = mod.default || mod
+      } catch (err2) {
+        log('`archiver` dynamic import failed: ' + String(err2))
+        archiverModule = null
+      }
+    }
+
+    if (archiverModule) {
+      // archiver may be exported as a function (CJS) or as a default ESM export
+      let createArchive = null
+      if (typeof archiverModule === 'function') createArchive = archiverModule
+      else if (archiverModule && typeof archiverModule.default === 'function') createArchive = archiverModule.default
+      else if (archiverModule && typeof archiverModule.archive === 'function') createArchive = archiverModule.archive
+      if (!createArchive) {
+        log('archiver module found but no function export detected; falling back to zip')
+      } else {
+        const output = fs.createWriteStream(zipPath)
+        const archive = createArchive('zip', { zlib: { level: 9 } })
+        output.on('close', function () { log('Created results zip: ' + zipPath + ' (' + archive.pointer() + ' bytes)') })
+        archive.on('error', function (err) { throw err })
+        archive.pipe(output)
+        archive.directory(LOG_DIR, false)
+        await archive.finalize()
+        // skip fallback logic
+        archiverModule = true
+      }
+    }
+    if (!archiverModule || archiverModule === true) {
+      // Fallbacks for Linux CI runners: try zip, python, then tar
+      try {
+        run(`cd "${OUT_DIR}" && zip -r "${path.basename(zipPath)}" ttam_results`)
+        log('Created results zip via zip: ' + zipPath)
+      } catch (e) {
+        try {
+          run(`cd "${OUT_DIR}" && python -m zipfile -r "${path.basename(zipPath)}" ttam_results`)
+          log('Created results zip via python zipfile: ' + zipPath)
+        } catch (e2) {
+          try {
+            run(`cd "${OUT_DIR}" && tar -czf "${path.basename(zipPath)}" ttam_results`)
+            log('Created results tar.gz as fallback: ' + path.join(OUT_DIR, path.basename(zipPath)))
+          } catch (e3) {
+            log('Failed creating zip via fallback: ' + String(e3))
+          }
+        }
+      }
+    }
   } catch (e) {
     log('Failed creating zip: ' + String(e))
   }

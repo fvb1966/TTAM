@@ -11,9 +11,11 @@ import Login from './pages/Login'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ConfirmProvider } from '@/components/ui/Confirm'
 
+type User = Record<string, unknown> | null
+
 export default function Layout() {
   const [page, setPage] = useState('dashboard')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User>(null)
 
   const renderMain = () => {
     switch (page) {
@@ -43,9 +45,9 @@ export default function Layout() {
     let mounted = true
     ;(async () => {
       try {
-        const u = await (window as any).ttam.auth.me()
+        const u = await window.ttam.auth.me()
         if (!mounted) return
-        setUser(u)
+        setUser(u as User)
       } catch {
         setUser(null)
       }
@@ -55,7 +57,7 @@ export default function Layout() {
 
   const handleSelect = async (k: string) => {
     if (k === 'exit') {
-      await (window as any).ttam.auth.logout()
+      await window.ttam.auth.logout()
       setUser(null)
       setPage('dashboard')
       return
@@ -71,7 +73,7 @@ export default function Layout() {
             <div className="flex-1 flex flex-col">
               <Header />
               <main className="p-6 overflow-auto">
-                <Login onAuth={(u: any) => setUser(u)} />
+                <Login onAuth={(u) => setUser(u as User)} />
               </main>
             </div>
           </div>

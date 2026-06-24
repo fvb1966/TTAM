@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { app, BrowserWindow, ipcMain } from 'electron'
 import * as path from 'path'
 import fs from 'fs'
@@ -182,7 +183,7 @@ app.whenReady().then(() => {
       }
       await writeConfig(next)
       return next
-    } catch (err) {
+    } catch {
       return null
     }
   })
@@ -238,7 +239,7 @@ app.whenReady().then(() => {
         }))
         stats.sort((a, b) => b.mtime - a.mtime)
         return stats
-      } catch (err) {
+      } catch {
         return []
       }
     })
@@ -271,7 +272,7 @@ app.whenReady().then(() => {
         }
 
         // Disconnect prisma, replace files, reconnect
-        try { await prisma.$disconnect() } catch { }
+        try { await prisma.$disconnect() } catch { /* ignore disconnect errors */ }
 
         if (fs.existsSync(extractedDb)) {
           await fs.promises.copyFile(extractedDb, dbPath)
@@ -301,7 +302,7 @@ app.whenReady().then(() => {
           }
         }
 
-        try { await prisma.$connect() } catch { }
+        try { await prisma.$connect() } catch { /* ignore connect errors */ }
 
         // cleanup
         await fs.promises.rm(tmpDir, { recursive: true, force: true })
