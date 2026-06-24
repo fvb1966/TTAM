@@ -7,13 +7,19 @@ import { readConfig, writeConfig } from './config'
 // doesn't crash. Note: PBKDF2 hashes are not compatible with Argon2 hashes —
 // existing Argon2 password hashes will not verify unless `argon2` is available.
 let argon2: any = null
-try {
-  // use require to avoid module load-time crashes when native bindings are missing
-  // vitest/vi.mock should still be able to mock this in tests
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  argon2 = require('argon2')
-} catch (e) {
-  argon2 = null
+
+async function ensureArgon2() {
+  if (argon2) return argon2
+  try {
+    // Use dynamic import so test runner (vitest) can mock it reliably.
+    const mod = await import('argon2')
+    const impl = (mod as any).default && typeof (mod as any).default === 'object' ? (mod as any).default : mod
+    argon2 = impl
+    return argon2
+  } catch (e) {
+    argon2 = null
+    return null
+  }
 }
 
 const pbkdf2Hash = async (password: string) => {
@@ -46,14 +52,16 @@ const pbkdf2Verify = async (stored: string, password: string) => {
 }
 
 const hashPassword = async (password: string) => {
-  if (argon2) return await argon2.hash(password)
+  const impl = await ensureArgon2()
+  if (impl && typeof impl.hash === 'function') return await impl.hash(password)
   return await pbkdf2Hash(password)
 }
 
 const verifyPassword = async (storedHash: string, password: string) => {
-  if (argon2) {
+  const impl = await ensureArgon2()
+  if (impl && typeof impl.verify === 'function') {
     try {
-      return await argon2.verify(storedHash, password)
+      return await impl.verify(storedHash, password)
     } catch (e) {
       // fall through to other checks
     }
