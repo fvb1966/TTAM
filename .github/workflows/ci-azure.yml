@@ -1,0 +1,35 @@
+name: CI - Azure Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+# Notes:
+# - Do NOT commit any credential files to the repository.
+# - Create a repository secret named AZURE_CREDENTIALS containing the
+#   JSON output from `az ad sp create-for-rbac ... --sdk-auth` before
+#   running this workflow.
