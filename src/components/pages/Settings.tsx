@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 
 export default function Settings() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const [locale, setLocale] = useState(i18n.language || 'es')
   const [currency, setCurrency] = useState('ARS')
   const [dbPath, setDbPath] = useState('')
@@ -20,33 +20,33 @@ export default function Settings() {
     let mounted = true
     ;(async () => {
       try {
-        const cfg = (await (window as any).ttam.settings.get()) || {}
-        const paths = (await (window as any).ttam.settings.paths()) || {}
+        const cfg = (await window.ttam.settings.get()) || {}
+        const paths = (await window.ttam.settings.paths()) || {}
         if (!mounted) return
-        setLocale(cfg.locale || (await (window as any).ttam.getLocale()) || i18n.language || 'es')
+        setLocale(cfg.locale || (await window.ttam.getLocale()) || i18n.language || 'es')
         setCurrency(cfg.currency || 'ARS')
         setBackupDir(cfg.backupDir || (paths.backupDir || ''))
         setRemember(Boolean(cfg.authRemember))
         setDbPath(paths.dbPath || '')
         // fetch available backups
         try {
-          const list = await (window as any).ttam.backup.list()
+          const list = await window.ttam.backup.list()
           setBackups(list || [])
           if ((list || []).length > 0) setSelectedBackup(list[0].path)
         } catch {
-          // ignore
+          /* ignore backup list error */
         }
-      } catch (err) {
-        // ignore
+      } catch {
+        /* ignore */
       }
     })()
     return () => { mounted = false }
-  }, [])
+  }, [i18n.language])
 
   const handleSave = async () => {
     setLoading(true)
       try {
-        await (window as any).ttam.settings.set({ locale, currency, backupDir, authRemember: remember })
+        await window.ttam.settings.set({ locale, currency, backupDir, authRemember: remember })
         // change renderer language (this also persists via i18n listener)
         await i18n.changeLanguage(locale)
         showToast('success', 'Ajustes guardados')
@@ -62,12 +62,14 @@ export default function Settings() {
   const handleBackupNow = async () => {
     setLoading(true)
       try {
-      const p = await (window as any).ttam.backup.create()
+      const p = await window.ttam.backup.create()
       showToast('success', `Backup creado: ${p}`)
       try {
-        const list = await (window as any).ttam.backup.list()
+        const list = await window.ttam.backup.list()
         setBackups(list || [])
-      } catch {}
+      } catch {
+        /* ignore */
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
@@ -80,11 +82,11 @@ export default function Settings() {
   const fetchBackups = async () => {
     setLoading(true)
     try {
-      const list = await (window as any).ttam.backup.list()
+      const list = await window.ttam.backup.list()
       setBackups(list || [])
       if ((list || []).length > 0) setSelectedBackup(list[0].path)
-    } catch (err) {
-      // ignore
+    } catch {
+      /* ignore */
     } finally {
       setLoading(false)
     }
@@ -96,7 +98,7 @@ export default function Settings() {
     if (!ok) return
     setLoading(true)
     try {
-      const res = await (window as any).ttam.backup.restore(selectedBackup)
+      const res = await window.ttam.backup.restore(selectedBackup)
       if (res && res.restored) {
         showToast('success', 'Restauración completada')
       } else {
@@ -152,7 +154,7 @@ export default function Settings() {
         <div className="mt-4 flex gap-2">
           <Button onClick={handleSave} disabled={loading}>Guardar ajustes</Button>
           <Button onClick={handleBackupNow} variant="ghost" disabled={loading}>Crear backup ahora</Button>
-          <Button onClick={async () => { await (window as any).ttam.auth.logout(); window.location.reload() }} variant="destructive">Cerrar sesión</Button>
+          <Button onClick={async () => { await window.ttam.auth.logout(); window.location.reload() }} variant="destructive">Cerrar sesión</Button>
         </div>
 
         <div className="mt-6">

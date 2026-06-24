@@ -67,7 +67,12 @@ export default function Inscripciones() {
   }, [])
 
   useEffect(() => {
-    void loadRegistrations(tournamentId)
+    let mounted = true
+    ;(async () => {
+      if (!mounted) return
+      await loadRegistrations(tournamentId)
+    })()
+    return () => { mounted = false }
   }, [tournamentId])
 
   const handleFile = (file: File | null) => {

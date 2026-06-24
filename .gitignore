@@ -9,3 +9,14 @@ data/
 *.log
 *.sqlite
 *.db
+
+# Ignore generated artifacts and installers
+artifacts/
+win-unpacked/
+AzureCLI.msi
+*.exe
+*.msi
+
+# Local secrets directory (do not commit credentials)
+Settings/Secrets/
+Settings/Secrets/**

@@ -9,8 +9,6 @@ import { useConfirm } from '@/components/ui/Confirm'
 type Student = { id: number; firstName: string; lastName?: string }
 type Payment = { id: number; amountCents: number; currency: string; student?: Student; paidAt: string }
 
-type EditPayment = { id: number; studentId?: number | null; amount?: string }
-
 export default function Pagos() {
   const { t } = useTranslation()
   const { showToast } = useToast()

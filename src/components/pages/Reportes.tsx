@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -10,7 +9,7 @@ type Student = { id: number; firstName: string; lastName?: string; email?: strin
 type Payment = { id: number; amountCents: number; currency: string; student?: Student; paidAt: string }
 
 export default function Reportes() {
-  const { t } = useTranslation()
+  // translation not required in this view yet
   const [loading, setLoading] = useState(false)
   const { showToast } = useToast()
 

@@ -3,7 +3,6 @@ const { execSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
-const archiver = require('archiver')
 
 const ROOT = process.cwd()
 const OUT_DIR = path.join(ROOT, 'artifacts', 'ttam_local_smoke')
@@ -136,16 +135,41 @@ async function main() {
     }
   }
 
-  // Package results into zip
+  // Package results into zip (try archiver, fallback to PowerShell Compress-Archive)
   const zipPath = path.join(OUT_DIR, 'ttam_test_results_local.zip')
   try {
-    const output = fs.createWriteStream(zipPath)
-    const archive = archiver('zip', { zlib: { level: 9 } })
-    output.on('close', function () { log('Created results zip: ' + zipPath + ' (' + archive.pointer() + ' bytes)') })
-    archive.on('error', function (err) { throw err })
-    archive.pipe(output)
-    archive.directory(LOG_DIR, false)
-    await archive.finalize()
+    let archiverModule = null
+    try {
+      archiverModule = require('archiver')
+    } catch (err) {
+      log('`archiver` module not found; running `npm ci` to install deps')
+      run('npm ci')
+      try {
+        archiverModule = require('archiver')
+      } catch (err2) {
+        log('`archiver` still not available: ' + String(err2))
+        archiverModule = null
+      }
+    }
+
+    if (archiverModule) {
+      const output = fs.createWriteStream(zipPath)
+      const archive = archiverModule('zip', { zlib: { level: 9 } })
+      output.on('close', function () { log('Created results zip: ' + zipPath + ' (' + archive.pointer() + ' bytes)') })
+      archive.on('error', function (err) { throw err })
+      archive.pipe(output)
+      archive.directory(LOG_DIR, false)
+      await archive.finalize()
+    } else {
+      // Fallback to PowerShell Compress-Archive on Windows
+      try {
+        const psCmd = `Compress-Archive -Path '${LOG_DIR}\\*' -DestinationPath '${zipPath}' -Force`
+        run(`powershell -NoProfile -Command "${psCmd.replace(/"/g, '\\"')}"`)
+        log('Created results zip via PowerShell Compress-Archive: ' + zipPath)
+      } catch (e) {
+        log('Failed creating zip via fallback: ' + String(e))
+      }
+    }
   } catch (e) {
     log('Failed creating zip: ' + String(e))
   }

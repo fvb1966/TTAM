@@ -3,7 +3,7 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 
-export default function Login({ onAuth }: { onAuth?: (user: any) => void }) {
+export default function Login({ onAuth }: { onAuth?: (user: Record<string, unknown> | null) => void }) {
   const [hasAdmin, setHasAdmin] = useState<boolean | null>(null)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -15,10 +15,10 @@ export default function Login({ onAuth }: { onAuth?: (user: any) => void }) {
     let mounted = true
     ;(async () => {
       try {
-        const has = await (window as any).ttam.auth.hasAdmin()
+        const has = await window.ttam.auth.hasAdmin()
         if (!mounted) return
         setHasAdmin(Boolean(has))
-      } catch (err) {
+      } catch {
         setHasAdmin(false)
       }
     })()
@@ -30,7 +30,7 @@ export default function Login({ onAuth }: { onAuth?: (user: any) => void }) {
     if (password !== confirmPassword) return showToast('info', 'Las contraseñas no coinciden')
     setLoading(true)
     try {
-      const user = await (window as any).ttam.auth.createAdmin({ username, password })
+      const user = await window.ttam.auth.createAdmin({ username, password })
       showToast('success', 'Administrador creado')
       if (onAuth) onAuth(user)
     } catch (err) {
@@ -46,7 +46,7 @@ export default function Login({ onAuth }: { onAuth?: (user: any) => void }) {
     if (!username || !password) return showToast('info', 'Ingrese usuario y contraseña')
     setLoading(true)
     try {
-      const user = await (window as any).ttam.auth.login({ username, password })
+      const user = await window.ttam.auth.login({ username, password })
       if (onAuth) onAuth(user)
     } catch (err) {
       // eslint-disable-next-line no-console
