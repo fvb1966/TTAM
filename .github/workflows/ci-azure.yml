@@ -29,6 +29,36 @@ jobs:
       - name: Run tests
         run: npm test
 
+  smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          allow-no-subscriptions: true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run smoke (local)
+        run: npm run smoke:local
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results
+          path: artifacts/ttam_local_smoke/**
+
 # Notes:
 # - Do NOT commit any credential files to the repository.
 # - Create a repository secret named AZURE_CREDENTIALS containing the
