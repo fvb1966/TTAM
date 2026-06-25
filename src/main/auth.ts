@@ -22,9 +22,10 @@ async function ensureArgon2() {
   // won't have a matching native binary. Prefer the local fallback shim that
   // implements the same `hash`/`verify` API using PBKDF2.
   try {
-    if (app && app.isPackaged) {
+    const execPath = (process && process.execPath) ? String(process.execPath).toLowerCase() : ''
+    if (app && (app.isPackaged || execPath.includes('win-unpacked') || execPath.includes('app.asar'))) {
       const fb = (await import('./argon2-fallback')) as unknown as Argon2Module
-      const impl = (fb && (fb as any).default && typeof (fb as any).default === 'object') ? (fb as any).default : (fb as any)
+      const impl = fb && (fb as any).default && typeof (fb as any).default === 'object' ? (fb as any).default : (fb as any)
       argon2 = impl
       return argon2
     }
