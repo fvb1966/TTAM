@@ -42,13 +42,21 @@ function createWindow() {
       path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'renderer', 'src', 'renderer', 'index.html')
     ]
     let found: string | null = null
+    if (process.env.TTAM_DEBUG === '1') {
+      console.log('TTAM DEBUG: __dirname=', __dirname)
+      console.log('TTAM DEBUG: app.getAppPath()=', app.getAppPath())
+      console.log('TTAM DEBUG: process.resourcesPath=', process.resourcesPath)
+    }
     for (const c of candidates) {
       try {
-        if (fs.existsSync(c)) {
+        const exists = fs.existsSync(c)
+        if (process.env.TTAM_DEBUG === '1') console.log('TTAM DEBUG: candidate', c, 'exists=', exists)
+        if (exists) {
           found = c
           break
         }
-      } catch {
+      } catch (err) {
+        if (process.env.TTAM_DEBUG === '1') console.log('TTAM DEBUG: exists check error for', c, String(err))
         // ignore
       }
     }
