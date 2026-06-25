@@ -16,10 +16,47 @@ function createWindow() {
     }
   })
 
+  // In development we use Vite dev server. In production there are a few
+  // possible locations for the built `index.html` depending on Vite's output
+  // layout. Try common locations and pick the first that exists so the app
+  // works regardless of whether the renderer was emitted to
+  // `dist/renderer/index.html` or `dist/renderer/src/renderer/index.html`.
   if (process.env.NODE_ENV === 'development') {
     win.loadURL('http://localhost:5173')
   } else {
-    win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'))
+    const candidates = [
+      path.join(__dirname, '..', 'renderer', 'index.html'),
+      path.join(__dirname, '..', 'renderer', 'src', 'renderer', 'index.html'),
+      path.join(__dirname, '..', 'renderer', 'src', 'index.html')
+    ]
+    let found: string | null = null
+    for (const c of candidates) {
+      try {
+        if (fs.existsSync(c)) {
+          found = c
+          break
+        }
+      } catch {
+        // ignore
+      }
+    }
+    if (found) {
+      win.loadFile(found)
+    } else {
+      // fallback: attempt to load packaged renderer root or show a diagnostic
+      try {
+        win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'))
+      } catch (err) {
+        console.error('Could not locate renderer index.html. Candidates:', candidates, err)
+        win.loadURL('about:blank')
+      }
+    }
+  }
+
+  // Allow opening DevTools when debugging the packaged app by setting
+  // environment variable TTAM_DEBUG=1
+  if (process.env.TTAM_DEBUG === '1') {
+    win.webContents.openDevTools({ mode: 'detach' })
   }
 }
 
