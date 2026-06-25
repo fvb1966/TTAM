@@ -8,11 +8,15 @@ import { readConfig, writeConfig } from './config'
 import * as auth from './auth'
 
 function createWindow() {
+  const preloadPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'preload.js')
+    : path.join(__dirname, 'preload.js')
+
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: preloadPath
     }
   })
 

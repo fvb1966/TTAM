@@ -32,7 +32,8 @@
       "node_modules/**"
     ],
     "asarUnpack": [
-      "**/*.node"
+      "**/*.node",
+      "dist/preload.js"
     ],
     "directories": {
       "buildResources": "build"
