@@ -1,6 +1,7 @@
 import { prisma } from './prisma'
 import * as crypto from 'crypto'
 import { readConfig, writeConfig } from './config'
+import { app } from 'electron'
 
 // Try to load native `argon2`. If it fails (packaged app without compatible
 // native binary), fall back to a PBKDF2-based JS implementation so the app
@@ -16,6 +17,21 @@ let argon2: Argon2Module | null = null
 
 async function ensureArgon2() {
   if (argon2) return argon2
+  // If the app is packaged for Windows, avoid attempting to load native
+  // `argon2` prebuilds here — many build environments (and end-user machines)
+  // won't have a matching native binary. Prefer the local fallback shim that
+  // implements the same `hash`/`verify` API using PBKDF2.
+  try {
+    if (app && app.isPackaged) {
+      const fb = (await import('./argon2-fallback')) as unknown as Argon2Module
+      const impl = (fb && (fb as any).default && typeof (fb as any).default === 'object') ? (fb as any).default : (fb as any)
+      argon2 = impl
+      return argon2
+    }
+  } catch {
+    // ignore fallback import errors and try native import below
+  }
+
   try {
     // Use dynamic import so test runner (vitest) can mock it reliably.
     const mod = (await import('argon2')) as unknown as Argon2Module
