@@ -25,9 +25,10 @@ function createWindow() {
     win.loadURL('http://localhost:5173')
   } else {
     const candidates = [
-      path.join(__dirname, '..', 'renderer', 'index.html'),
-      path.join(__dirname, '..', 'renderer', 'src', 'renderer', 'index.html'),
-      path.join(__dirname, '..', 'renderer', 'src', 'index.html')
+      path.join(__dirname, 'renderer', 'index.html'),
+      path.join(__dirname, 'renderer', 'src', 'renderer', 'index.html'),
+      path.join(__dirname, 'renderer', 'src', 'index.html'),
+      path.join(__dirname, '..', 'renderer', 'src', 'renderer', 'index.html')
     ]
     let found: string | null = null
     for (const c of candidates) {
