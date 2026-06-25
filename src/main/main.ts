@@ -28,11 +28,18 @@ function createWindow() {
   if (process.env.NODE_ENV === 'development') {
     win.loadURL('http://localhost:5173')
   } else {
+    const appPath = app.getAppPath()
     const candidates = [
+      // paths relative to __dirname (when running unpacked or from dist)
       path.join(__dirname, 'renderer', 'index.html'),
       path.join(__dirname, 'renderer', 'src', 'renderer', 'index.html'),
       path.join(__dirname, 'renderer', 'src', 'index.html'),
-      path.join(__dirname, '..', 'renderer', 'src', 'renderer', 'index.html')
+      // try app.getAppPath() which may point to the app root inside asar
+      path.join(appPath, 'renderer', 'index.html'),
+      path.join(appPath, 'renderer', 'src', 'renderer', 'index.html'),
+      // try resources path inside app.asar or unpacked area
+      path.join(process.resourcesPath, 'app.asar', 'dist', 'renderer', 'src', 'renderer', 'index.html'),
+      path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'renderer', 'src', 'renderer', 'index.html')
     ]
     let found: string | null = null
     for (const c of candidates) {
